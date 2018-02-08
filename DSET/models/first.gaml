@@ -5,7 +5,6 @@
 * Tags: Tag1, Tag2, TagN
 * draw string("Off_" + int(self)) color: # white font: font('Helvetica Neue', 12, # bold + # italic);
 */
-
 model model1
 
 
@@ -17,14 +16,14 @@ global
 	file shape_file_bounds <- file("../includes/Boundary_study_area_rough.shp");
 	file shape_buildings <- file("../includes/Buildings_Amsterdam.shp");
 	geometry shape <- envelope(shape_file_bounds);
-	
-	
+
 	// variables for model parameters
-	
-	float proportion_of_offices <-0.1;
-	float distance_between_homes <-2000.0;
-	float relative_work_work_distance <- 3000.0 ;
+	float proportion_of_offices <- 0.1;
+	float distance_between_homes <- 2000.0;
+	float relative_work_work_distance <- 3000.0;
 	int inhabitant_population <- 10;
+//TODO check if this below  should be global or agent specific
+	float max_travel_mode_difference <-3.0;
 
 	/** Insert the global definitions, variables and actions here */
 	list<string> modes <- ["bike", "walk", "publictransport", "car"];
@@ -36,23 +35,26 @@ global
 	{
 		create study_area from: shape_file_bounds;
 		create roads from: shape_file_streets;
-		create buildings from: shape_buildings{
-		
+		create buildings from: shape_buildings
+		{
 		}
-		
-		loop i over:buildings{
-			if flip(proportion_of_offices) {
+
+		loop i over: buildings
+		{
+			if flip(proportion_of_offices)
+			{
 				i.use <- "office";
-			} else {
+			} else
+			{
 				i.use <- "residential";
 			}
-			
+
 		}
-		
+
 		create inhabitants number: inhabitant_population
 		{
-			
-			//do assess_peer_differences( list(inhabitants), distance_between_homes, relative_home_work_distance );
+
+		//do assess_peer_differences( list(inhabitants), distance_between_homes, relative_home_work_distance );
 		}
 
 		string aaa <- "bike";
@@ -69,36 +71,36 @@ global
 
 species buildings
 {
-	
-	string use ;
+	string use;
 	rgb my_color;
-	
-
 	aspect a
 	{
 		float building_height <- rnd(3.0, 12.0);
-		if use = "office"{
-			my_color <-rgb(#gray);
-		} else {
-			my_color <- rgb(#saddlebrown);
+		if use = "office"
+		{
+			my_color <- rgb(# gray);
+		} else
+		{
+			my_color <- rgb(# saddlebrown);
 		}
+
 		draw shape color: my_color depth: building_height;
 		draw shape color: my_color at: { location.x, location.y, building_height };
-		
 	}
-	
-	aspect transparent_frame{
-		
+
+	aspect transparent_frame
+	{
 		float building_height <- rnd(3.0, 12.0);
-		if use = "office"{
-			my_color <-rgb(#gray, 0.2);
-		} else {
-			my_color <- rgb(#brown, 0.2);
+		if use = "office"
+		{
+			my_color <- rgb(# gray, 0.2);
+		} else
+		{
+			my_color <- rgb(# brown, 0.2);
 		}
+
 		draw shape color: my_color depth: building_height;
 		draw shape color: my_color at: { location.x, location.y, building_height };
-		
-	
 	}
 
 }
@@ -125,28 +127,32 @@ species study_area
 
 }
 
-
-
-species inhabitants schedules:shuffle(inhabitants)
+species inhabitants schedules: shuffle(inhabitants)
 {
-//ATTRIBUTES
+// TRAVEL ATTRIBUTES
 	string mode_preferred <- one_of(modes);
 	string mode_actual <- one_of(modes);
-	int value_preferred_mode <- mode_value[mode_preferred];
-	int value_actual_mode <- mode_value[mode_actual];
+	int value_mode_preferred <- mode_value[mode_preferred];
+	int value_mode_actual <- mode_value[mode_actual];
+//FIXME  these two below need to change to network characteristics, when we have a clean network
+	float my_travel_distance <- rnd(1.0,10.0);
+	float my_travel_time <- my_travel_distance / mode_speed[mode_actual];
+	
+	
+	
 	//buildings home;
 	list<inhabitants> my_peers;
-	
-	
-	buildings home <- one_of(buildings where (each.use = "residential"));
-			point location <-home.location;
-			buildings office <- one_of(buildings where (each.use = "office"));
-			bool has_peers <- false;
+	buildings my_home <- one_of(buildings where (each.use = "residential"));
+	// check location below  if any error, this could be a possible error in rare cases
+	point location <- my_home.location;
+	buildings my_office <- one_of(buildings where (each.use = "office"));
+	bool has_peers <- false;
 
 	//NEEDS
-	float need_social;
-	float need_personal;
-	float need_existencial;
+	float my_need_social;
+	
+	float my_need_personal;
+	float my_need_existencial;
 
 	//DIFFERENCES
 	float diff_mode;
@@ -155,25 +161,25 @@ species inhabitants schedules:shuffle(inhabitants)
 	////
 	init
 	{
-		//do select_peers;
-		do assess_peer_differences( list(inhabitants), distance_between_homes, relative_work_work_distance );
+	//do select_peers;
+		do assess_peer_differences(list(inhabitants), distance_between_homes, relative_work_work_distance);
+		do calculate_social_need;
 	}
 
-	list<inhabitants> assess_peer_differences (list<inhabitants> possible_peers, float home_distance <- 2000 , float office_office_distance <- 250)
+	list<inhabitants> assess_peer_differences (list<inhabitants> possible_peers, float home_distance <- 2000, float office_office_distance <- 250)
 	{
-		possible_peers <- (possible_peers ) - self;
+		possible_peers <- (possible_peers) - self;
 		map<inhabitants, float> relative_diff_mode_preferred;
 		map<inhabitants, float> relative_diff_mode_actual;
 		map<inhabitants, float> relative_diff_home_office_distance;
 		map<inhabitants, float> relative_diff_home_home_distance;
 		map<inhabitants, float> relative_diff_office_office_distance;
-		
 		loop pp over: possible_peers // pp short for possible peer
 
 		{
 
-			// CRITERIA 1 - DIFFERENCES IN PREFERRED MODES
-			switch abs(self.value_preferred_mode - pp.value_preferred_mode)
+		// CRITERIA 1 - DIFFERENCES IN PREFERRED MODES
+			switch abs(self.value_mode_preferred - pp.value_mode_preferred)
 			{
 				match 0
 				{
@@ -198,7 +204,7 @@ species inhabitants schedules:shuffle(inhabitants)
 			}
 
 			// CRITERIA 2 - DIFFERENCES IN ACTUAL MODES
-			switch abs(self.value_actual_mode - pp.value_actual_mode)
+			switch abs(self.value_mode_actual - pp.value_mode_actual)
 			{
 				match 0
 				{
@@ -222,11 +228,10 @@ species inhabitants schedules:shuffle(inhabitants)
 
 			}
 
-
 			// CRITERIA 3 - DISTANCE BETWEEN INHABITANT'S HOME AND PEER'S HOME 
-			if distance_to(self.home, pp.home) < home_distance  
+			if distance_to(self.my_home, pp.my_home) < home_distance
 			{
-				float d <- distance_to(self.home, pp.home);
+				float d <- distance_to(self.my_home, pp.my_home);
 				//write d;
 				add pp::(d / home_distance) to: relative_diff_home_home_distance;
 			} else
@@ -235,25 +240,22 @@ species inhabitants schedules:shuffle(inhabitants)
 			}
 
 			// CRITERIA 4 - RELATIVE HOME-WORK DISTANCES ; if potential peer travels similar distance, I am more attached to this peer's behavior
-			float my_home_office_distance <- distance_to(self.home, self.office);
-			if distance_to(pp.home, pp.office) < my_home_office_distance 
+			float my_home_office_distance <- distance_to(self.my_home, self.my_office);
+			if distance_to(pp.my_home, pp.my_office) < my_home_office_distance
 			{
-				float d <- distance_to(pp.home, pp.office)/my_home_office_distance;
+				float d <- distance_to(pp.my_home, pp.my_office) / my_home_office_distance;
 				//write d;
-				add pp::(1-d) to: relative_diff_home_office_distance;
+				add pp::(1 - d) to: relative_diff_home_office_distance;
 			} else
 			{
 				add pp::1 to: relative_diff_home_office_distance;
 			}
-			
-			
+
 			// CRITERIA 5 - IF AGENTS ARE WORKING CLOSE TO EACH OTHER, SAY WITHIN 250m, they more likely to be peers.
-			
-			float my_office_peer_office_distance <- distance_to(self.office, pp.office);
-			if my_office_peer_office_distance < office_office_distance 
+			float my_office_peer_office_distance <- distance_to(self.my_office, pp.my_office);
+			if my_office_peer_office_distance < office_office_distance
 			{
-				float d <- distance_to(self.office, pp.office)/office_office_distance;
-				
+				float d <- distance_to(self.my_office, pp.my_office) / office_office_distance;
 				add pp::d to: relative_diff_office_office_distance;
 			} else
 			{
@@ -261,38 +263,68 @@ species inhabitants schedules:shuffle(inhabitants)
 			}
 
 		}
-//		write "============================";
-// write relative_diff_home_home_distance;
-// write relative_diff_mode_preferred;
-// write relative_diff_mode_actual;
-// write relative_diff_home_office_distance;
-// write relative_diff_office_office_distance;
-// 
- 
- // ADD ALL CRITERIA TOGETHER INTO AN INDEX final_score
- map<inhabitants, float> final_score;
- loop i over:relative_diff_home_home_distance.keys{
- 	add  i::(relative_diff_home_home_distance[i] + 
- 		relative_diff_mode_preferred[i] + 
- 		relative_diff_mode_actual[i] +
- 		relative_diff_home_office_distance[i] + 
- 		relative_diff_office_office_distance[i]  
- 	) to:final_score ;
- }
- 
- //write "==================FINAL SCORE ============";
-//write final_score;
+		//		write "============================";
+		// write relative_diff_home_home_distance;
+		// write relative_diff_mode_preferred;
+		// write relative_diff_mode_actual;
+		// write relative_diff_home_office_distance;
+		// write relative_diff_office_office_distance;
+		// 
 
- my_peers <-  first(5,final_score.keys sort_by(final_score[each])) ;
- save [ cycle, self.name, my_peers] to:"../output/my_peers.csv" type:"csv" rewrite:false;
- return my_peers;
- 
- 
+		// ADD ALL CRITERIA TOGETHER INTO AN INDEX final_score
+		map<inhabitants, float> final_score;
+		loop i over: relative_diff_home_home_distance.keys
+		{
+			add
+			i::(relative_diff_home_home_distance[i] + relative_diff_mode_preferred[i] + relative_diff_mode_actual[i] + relative_diff_home_office_distance[i] + relative_diff_office_office_distance[i])
+			to: final_score;
+		}
+
+		//write "==================FINAL SCORE ============";
+		//write final_score;
+		my_peers <- first(5, final_score.keys sort_by (final_score[each]));
+		has_peers <- length(my_peers)>0?true:false;
+		save [cycle, self.name, my_peers] to: "../output/my_peers.csv" type: "csv" rewrite: false;
+		return my_peers;
 	}
 
+	float calculate_superiority(list<inhabitants> _peers)
+	{
+//TODO check for travel speed and travel distance conflicts, currently it is all random numbers
+		list<float> difference_with_my_peers <- _peers collect (each.my_travel_time - self.my_travel_time);
+		//write difference_with_my_peers;
+		if my_travel_time > mean(_peers collect (each.my_travel_time)){
+			return 0.0;
+		}
+		else{
+			return self.my_travel_time/mean(_peers collect (each.my_travel_time));
+		}
+		
+	}
+
+	float calculate_similarity (list<inhabitants> _peers)
+	{
+		
+		//write self.value_actual_mode; // DEBUG STATEMENTS
+		//write self.my_peers collect each.value_actual_mode; //DEBUG STATEMENTS
+		list<float> difference_with_my_peers <- (_peers collect (abs(each.value_mode_actual - self.value_mode_actual))) collect (each/max_travel_mode_difference); //absolute difference
+		//write difference_with_my_peers;
+		if sum(difference_with_my_peers) = 0{
+			return  0.0;
+		} else {
+			return  sum(difference_with_my_peers)/length(_peers);
+		}
+		
+	}
 
 	action calculate_social_need
 	{
+		float similarity_value;
+		similarity_value<- calculate_similarity(my_peers);
+		float superiority_value;
+		superiority_value <- calculate_superiority(my_peers);
+		my_need_social <- (similarity_value + superiority_value)/2;
+		write my_need_social;
 	}
 
 	action calculate_personal_need
@@ -303,8 +335,6 @@ species inhabitants schedules:shuffle(inhabitants)
 	{
 	}
 
-
-
 	aspect a
 	{
 		if !empty(my_peers)
@@ -314,7 +344,7 @@ species inhabitants schedules:shuffle(inhabitants)
 			draw string(int(self)) color: # white font: font('Helvetica Neue', 12, # bold + # italic);
 			ask my_peers
 			{
-				draw polyline([self, myself]) color: rgb(# green,0.5);
+				draw polyline([self, myself]) color: rgb(# green, 0.5);
 			}
 
 		} else
@@ -330,10 +360,10 @@ species inhabitants schedules:shuffle(inhabitants)
 experiment model1 type: gui
 {
 	float seed <- 0.8484812926428652;
-	parameter "Proportion of offices in landuse" var:proportion_of_offices min:0.0 max:1.0 step:0.1 category:"Global Model Parameters";
-	parameter "Total inhabitant population" var:inhabitant_population min:1 max:1000 step:100 category: "Global Model Parameters";
-	parameter "Work 2 Work distance" var:relative_work_work_distance min:1.0 max:20000.0 step:100 category:"Peer Calculations";
-	parameter "Distance between peer homes" var:distance_between_homes min:1.0 max:5000.0 step:100 category:"Peer Calculations";
+	parameter "Proportion of offices in landuse" var: proportion_of_offices min: 0.0 max: 1.0 step: 0.1 category: "Global Model Parameters";
+	parameter "Total inhabitant population" var: inhabitant_population min: 1 max: 1000 step: 100 category: "Global Model Parameters";
+	parameter "Work 2 Work distance" var: relative_work_work_distance min: 1.0 max: 20000.0 step: 100 category: "Peer Calculations";
+	parameter "Distance between peer homes" var: distance_between_homes min: 1.0 max: 5000.0 step: 100 category: "Peer Calculations";
 	/** Insert here the definition of the input and output of the model */
 	output
 	{
@@ -342,8 +372,7 @@ experiment model1 type: gui
 			species study_area aspect: a;
 			species buildings aspect: a;
 			species roads aspect: a;
-			
-			species inhabitants aspect: a position:{0,0,0.051};
+			species inhabitants aspect: a position: { 0, 0, 0.051 };
 		}
 
 	}
