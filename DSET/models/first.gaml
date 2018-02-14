@@ -1,6 +1,6 @@
 /**
 * Name: model1
-* Author: Ram
+* Author: Srirama Bhamidipati
 * Description: 
 * Tags: Tag1, Tag2, TagN
 * draw string("Off_" + int(self)) color: # white font: font('Helvetica Neue', 12, # bold + # italic);
@@ -130,13 +130,14 @@ species study_area
 species inhabitants schedules: shuffle(inhabitants)
 {
 // TRAVEL ATTRIBUTES
-	string mode_preferred <- one_of(modes);
-	string mode_actual <- one_of(modes);
-	int value_mode_preferred <- mode_value[mode_preferred];
-	int value_mode_actual <- mode_value[mode_actual];
+	string my_mode_preferred <- one_of(modes);
+	string my_mode_actual <- one_of(modes);
+	int value_mode_preferred <- mode_value[my_mode_preferred];
+	int value_mode_actual <- mode_value[my_mode_actual];
 //FIXME  these two below need to change to network characteristics, when we have a clean network
 	float my_travel_distance <- rnd(1.0,10.0);
-	float my_travel_time <- my_travel_distance / mode_speed[mode_actual];
+	float my_travel_time <- my_travel_distance / mode_speed[my_mode_actual];
+	float my_aspiration;
 	
 	
 	
@@ -147,25 +148,32 @@ species inhabitants schedules: shuffle(inhabitants)
 	point location <- my_home.location;
 	buildings my_office <- one_of(buildings where (each.use = "office"));
 	bool has_peers <- false;
+	
+	
 
 	//NEEDS
 	float my_need_social;
-	
 	float my_need_personal;
-	float my_need_existencial;
+	float my_need_existence;
+	float my_overall_needs_satisfaction;
 
-	//DIFFERENCES
-	float diff_mode;
-	float diff_workplace;
-	float diff_nearness;
-	////
+
+
+	
+	
+	
 	init
 	{
 	//do select_peers;
 		do assess_peer_differences(list(inhabitants), distance_between_homes, relative_work_work_distance);
 		do calculate_social_need;
+		my_need_personal <- calculate_personal_need();
+		do calculate_existence_need;
+		my_overall_needs_satisfaction <- 1.0;
 	}
-
+	
+	
+// FUNCTION TO GET PEERS
 	list<inhabitants> assess_peer_differences (list<inhabitants> possible_peers, float home_distance <- 2000, float office_office_distance <- 250)
 	{
 		possible_peers <- (possible_peers) - self;
@@ -326,12 +334,16 @@ species inhabitants schedules: shuffle(inhabitants)
 		my_need_social <- (similarity_value + superiority_value)/2;
 		write my_need_social;
 	}
+	
+	
 
-	action calculate_personal_need
+	float calculate_personal_need
 	{
+		float relative_diff_to_current_peers <-value_mode_preferred - value_mode_actual = 0?0.0:(abs(value_mode_preferred-value_mode_actual)/3.0);
+		return relative_diff_to_current_peers;
 	}
 
-	action calculate_existencial_need
+	action calculate_existence_need
 	{
 	}
 
@@ -340,7 +352,7 @@ species inhabitants schedules: shuffle(inhabitants)
 		if !empty(my_peers)
 		{
 			draw circle(50) color: rgb(# blue, 0.2) empty: true;
-			draw circle(20) color: rgb(((modes index_of mode_actual) + 10) * 60, 100, 100);
+			draw circle(20) color: rgb(((modes index_of my_mode_actual) + 10) * 60, 100, 100);
 			draw string(int(self)) color: # white font: font('Helvetica Neue', 12, # bold + # italic);
 			ask my_peers
 			{
@@ -349,7 +361,7 @@ species inhabitants schedules: shuffle(inhabitants)
 
 		} else
 		{
-			draw circle(20) color: rgb((modes index_of (mode_actual)) * 60, 0, 0);
+			draw circle(20) color: rgb((modes index_of (my_mode_actual)) * 60, 0, 0);
 			draw string(int(self)) color: # white font: font('Helvetica Neue', 12, # bold);
 		}
 
