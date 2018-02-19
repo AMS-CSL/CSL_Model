@@ -1,0 +1,153 @@
+#
+## Alias OBJ Material File
+# Exported from SketchUp, (c) 2000-2012 Trimble Navigation Limited
+
+newmtl _Charcoal_
+Ka 0.000000 0.000000 0.000000
+Kd 0.137255 0.137255 0.137255
+Ks 0.330000 0.330000 0.330000
+
+newmtl CS_wings
+Ka 0.000000 0.000000 0.000000
+Kd 0.827451 0.866667 0.905882
+Ks 0.330000 0.330000 0.330000
+map_Kd edited_station/CS_wings.jpg
+
+newmtl FrontColor
+Ka 0.000000 0.000000 0.000000
+Kd 1.000000 1.000000 1.000000
+Ks 0.330000 0.330000 0.330000
+
+newmtl CS_dak2
+Ka 0.000000 0.000000 0.000000
+Kd 0.427451 0.447059 0.450980
+Ks 0.330000 0.330000 0.330000
+map_Kd edited_station/CS_dak2.jpg
+
+newmtl cs_SITU
+Ka 0.000000 0.000000 0.000000
+Kd 0.580392 0.584314 0.537255
+Ks 0.330000 0.330000 0.330000
+map_Kd edited_station/cs_SITU.jpg
+
+newmtl CS_koep2
+Ka 0.000000 0.000000 0.000000
+Kd 0.415686 0.458824 0.490196
+Ks 0.330000 0.330000 0.330000
+d 0.680000
+map_Kd edited_station/CS_koep2.jpg
+
+newmtl _15
+Ka 0.000000 0.000000 0.000000
+Kd 0.462745 0.462745 0.466667
+Ks 0.330000 0.330000 0.330000
+map_Kd edited_station/_15.jpg
+
+newmtl CS_dak
+Ka 0.000000 0.000000 0.000000
+Kd 0.360784 0.345098 0.333333
+Ks 0.330000 0.330000 0.330000
+map_Kd edited_station/CS_dak.jpg
+
+newmtl CS_geb10
+Ka 0.000000 0.000000 0.000000
+Kd 0.435294 0.360784 0.313725
+Ks 0.330000 0.330000 0.330000
+map_Kd edited_station/CS_geb10.jpg
+
+newmtl CS_geb5
+Ka 0.000000 0.000000 0.000000
+Kd 0.580392 0.505882 0.490196
+Ks 0.330000 0.330000 0.330000
+map_Kd edited_station/CS_geb5.jpg
+
+newmtl CS_geb6
+Ka 0.000000 0.000000 0.000000
+Kd 0.505882 0.470588 0.462745
+Ks 0.330000 0.330000 0.330000
+map_Kd edited_station/CS_geb6.jpg
+
+newmtl alg_beton
+Ka 0.000000 0.000000 0.000000
+Kd 0.686275 0.666667 0.654902
+Ks 0.330000 0.330000 0.330000
+map_Kd edited_station/alg_beton.jpg
+
+newmtl CS_muuralg
+Ka 0.000000 0.000000 0.000000
+Kd 0.458824 0.384314 0.368627
+Ks 0.330000 0.330000 0.330000
+map_Kd edited_station/CS_muuralg.jpg
+
+newmtl CS_geb1
+Ka 0.000000 0.000000 0.000000
+Kd 0.639216 0.592157 0.588235
+Ks 0.330000 0.330000 0.330000
+map_Kd edited_station/CS_geb1.jpg
+
+newmtl CS_voor
+Ka 0.000000 0.000000 0.000000
+Kd 0.509804 0.529412 0.572549
+Ks 0.330000 0.330000 0.330000
+map_Kd edited_station/CS_voor.jpg
+
+newmtl CS_algdakrandrood
+Ka 0.000000 0.000000 0.000000
+Kd 0.415686 0.231373 0.215686
+Ks 0.330000 0.330000 0.330000
+map_Kd edited_station/CS_algdakrandrood.jpg
+
+newmtl CS_dak3
+Ka 0.000000 0.000000 0.000000
+Kd 0.721569 0.721569 0.721569
+Ks 0.330000 0.330000 0.330000
+map_Kd edited_station/CS_dak3.jpg
+
+newmtl CS_geb7
+Ka 0.000000 0.000000 0.000000
+Kd 0.513725 0.474510 0.490196
+Ks 0.330000 0.330000 0.330000
+map_Kd edited_station/CS_geb7.jpg
+
+newmtl CS_ako2
+Ka 0.000000 0.000000 0.000000
+Kd 0.160784 0.231373 0.231373
+Ks 0.330000 0.330000 0.330000
+map_Kd edited_station/CS_ako2.jpg
+
+newmtl CS_geb8
+Ka 0.000000 0.000000 0.000000
+Kd 0.545098 0.490196 0.486275
+Ks 0.330000 0.330000 0.330000
+map_Kd edited_station/CS_geb8.jpg
+
+newmtl CS_geb11
+Ka 0.000000 0.000000 0.000000
+Kd 0.486275 0.443137 0.443137
+Ks 0.330000 0.330000 0.330000
+map_Kd edited_station/CS_geb11.jpg
+
+newmtl CS_geb14
+Ka 0.000000 0.000000 0.000000
+Kd 0.478431 0.415686 0.388235
+Ks 0.330000 0.330000 0.330000
+map_Kd edited_station/CS_geb14.jpg
+
+newmtl CS_algmuur2
+Ka 0.000000 0.000000 0.000000
+Kd 0.537255 0.474510 0.450980
+Ks 0.330000 0.330000 0.330000
+map_Kd edited_station/CS_algmuur2.jpg
+
+newmtl CS_geb13
+Ka 0.000000 0.000000 0.000000
+Kd 0.290196 0.286275 0.282353
+Ks 0.330000 0.330000 0.330000
+map_Kd edited_station/CS_geb13.jpg
+
+newmtl CS_trapentree
+Ka 0.000000 0.000000 0.000000
+Kd 0.650980 0.694118 0.733333
+Ks 0.330000 0.330000 0.330000
+map_Kd edited_station/CS_trapentree.jpg
+

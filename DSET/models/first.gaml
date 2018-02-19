@@ -6,7 +6,7 @@
 * draw string("Off_" + int(self)) color: # white font: font('Helvetica Neue', 12, # bold + # italic);
 */
 model model1
-
+import "../includes/dset_library.gaml"
 
 global
 {

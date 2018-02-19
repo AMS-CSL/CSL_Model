@@ -1,0 +1,285 @@
+#
+## Alias OBJ Material File
+# Exported from SketchUp, (c) 2000-2012 Trimble Navigation Limited
+
+newmtl FrontColor
+Ka 0.000000 0.000000 0.000000
+Kd 1.000000 1.000000 1.000000
+Ks 0.330000 0.330000 0.330000
+
+newmtl Photo_Texture8_1
+Ka 0.000000 0.000000 0.000000
+Kd 0.682353 0.670588 0.658824
+Ks 0.330000 0.330000 0.330000
+map_Kd rijksmuseum/Photo_Texture8_1.jpg
+
+newmtl Google_Earth_Snapshot
+Ka 0.000000 0.000000 0.000000
+Kd 0.572549 0.600000 0.552941
+Ks 0.330000 0.330000 0.330000
+map_Kd rijksmuseum/Google_Earth_Snapshot.jpg
+
+newmtl Material_15
+Ka 0.000000 0.000000 0.000000
+Kd 0.184314 0.172549 0.176471
+Ks 0.330000 0.330000 0.330000
+map_Kd rijksmuseum/Material_15.jpg
+
+newmtl Material_16
+Ka 0.000000 0.000000 0.000000
+Kd 0.309804 0.274510 0.282353
+Ks 0.330000 0.330000 0.330000
+map_Kd rijksmuseum/Material_16.jpg
+
+newmtl transpa_2
+Ka 0.000000 0.000000 0.000000
+Kd 0.670588 0.670588 0.670588
+Ks 0.330000 0.330000 0.330000
+map_Kd rijksmuseum/transpa_2.png
+
+newmtl Material_21
+Ka 0.000000 0.000000 0.000000
+Kd 0.839216 0.858824 0.854902
+Ks 0.330000 0.330000 0.330000
+map_Kd rijksmuseum/Material_21.jpg
+
+newmtl Material_11
+Ka 0.000000 0.000000 0.000000
+Kd 0.376471 0.333333 0.294118
+Ks 0.330000 0.330000 0.330000
+map_Kd rijksmuseum/Material_11.jpg
+
+newmtl Material_3
+Ka 0.000000 0.000000 0.000000
+Kd 0.588235 0.501961 0.443137
+Ks 0.330000 0.330000 0.330000
+map_Kd rijksmuseum/Material_3.jpg
+
+newmtl Material_1
+Ka 0.000000 0.000000 0.000000
+Kd 0.439216 0.384314 0.372549
+Ks 0.330000 0.330000 0.330000
+map_Kd rijksmuseum/Material_1.jpg
+
+newmtl Material_2
+Ka 0.000000 0.000000 0.000000
+Kd 0.537255 0.482353 0.447059
+Ks 0.330000 0.330000 0.330000
+map_Kd rijksmuseum/Material_2.jpg
+
+newmtl rma9_1
+Ka 0.000000 0.000000 0.000000
+Kd 0.411765 0.454902 0.494118
+Ks 0.330000 0.330000 0.330000
+map_Kd rijksmuseum/rma9_1.jpg
+
+newmtl Photo_Texture9_1
+Ka 0.000000 0.000000 0.000000
+Kd 0.239216 0.266667 0.317647
+Ks 0.330000 0.330000 0.330000
+map_Kd rijksmuseum/Photo_Texture9_1.jpg
+
+newmtl Material_13
+Ka 0.000000 0.000000 0.000000
+Kd 0.419608 0.423529 0.415686
+Ks 0.330000 0.330000 0.330000
+map_Kd rijksmuseum/Material_13.jpg
+
+newmtl Photo_Texture11_1
+Ka 0.000000 0.000000 0.000000
+Kd 0.721569 0.717647 0.749020
+Ks 0.330000 0.330000 0.330000
+map_Kd rijksmuseum/Photo_Texture11_1.jpg
+
+newmtl Material_30
+Ka 0.000000 0.000000 0.000000
+Kd 0.662745 0.658824 0.698039
+Ks 0.330000 0.330000 0.330000
+map_Kd rijksmuseum/Material_30.jpg
+
+newmtl Photo_Texture11_2
+Ka 0.000000 0.000000 0.000000
+Kd 0.450980 0.443137 0.470588
+Ks 0.330000 0.330000 0.330000
+map_Kd rijksmuseum/Photo_Texture11_2.jpg
+
+newmtl transpa_1
+Ka 0.000000 0.000000 0.000000
+Kd 0.807843 0.807843 0.807843
+Ks 0.330000 0.330000 0.330000
+map_Kd rijksmuseum/transpa_1.png
+
+newmtl Material_29
+Ka 0.000000 0.000000 0.000000
+Kd 0.388235 0.349020 0.325490
+Ks 0.330000 0.330000 0.330000
+map_Kd rijksmuseum/Material_29.jpg
+
+newmtl Material_17
+Ka 0.000000 0.000000 0.000000
+Kd 0.360784 0.345098 0.329412
+Ks 0.330000 0.330000 0.330000
+map_Kd rijksmuseum/Material_17.jpg
+
+newmtl transpa_4
+Ka 0.000000 0.000000 0.000000
+Kd 0.874510 0.874510 0.874510
+Ks 0.330000 0.330000 0.330000
+map_Kd rijksmuseum/transpa_4.png
+
+newmtl rma1
+Ka 0.000000 0.000000 0.000000
+Kd 0.494118 0.509804 0.529412
+Ks 0.330000 0.330000 0.330000
+map_Kd rijksmuseum/rma1.png
+
+newmtl Material_5
+Ka 0.000000 0.000000 0.000000
+Kd 0.705882 0.717647 0.701961
+Ks 0.330000 0.330000 0.330000
+map_Kd rijksmuseum/Material_5.jpg
+
+newmtl Material
+Ka 0.000000 0.000000 0.000000
+Kd 0.356863 0.360784 0.376471
+Ks 0.330000 0.330000 0.330000
+map_Kd rijksmuseum/Material.jpg
+
+newmtl Material_4
+Ka 0.000000 0.000000 0.000000
+Kd 0.670588 0.686275 0.666667
+Ks 0.330000 0.330000 0.330000
+map_Kd rijksmuseum/Material_4.jpg
+
+newmtl Photo_Texture_1
+Ka 0.000000 0.000000 0.000000
+Kd 0.211765 0.223529 0.200000
+Ks 0.330000 0.330000 0.330000
+map_Kd rijksmuseum/Photo_Texture_1.jpg
+
+newmtl rma1_1_
+Ka 0.000000 0.000000 0.000000
+Kd 0.494118 0.509804 0.529412
+Ks 0.330000 0.330000 0.330000
+map_Kd rijksmuseum/rma1_1_.png
+
+newmtl Material_20
+Ka 0.000000 0.000000 0.000000
+Kd 0.360784 0.360784 0.356863
+Ks 0.330000 0.330000 0.330000
+map_Kd rijksmuseum/Material_20.jpg
+
+newmtl Google_Earth_Snapshot_1
+Ka 0.000000 0.000000 0.000000
+Kd 0.592157 0.619608 0.572549
+Ks 0.330000 0.330000 0.330000
+map_Kd rijksmuseum/Google_Earth_Snapshot_1.jpg
+
+newmtl transpa_5
+Ka 0.000000 0.000000 0.000000
+Kd 0.835294 0.835294 0.835294
+Ks 0.330000 0.330000 0.330000
+map_Kd rijksmuseum/transpa_5.png
+
+newmtl Material_9
+Ka 0.000000 0.000000 0.000000
+Kd 0.411765 0.349020 0.309804
+Ks 0.330000 0.330000 0.330000
+map_Kd rijksmuseum/Material_9.jpg
+
+newmtl Material_12
+Ka 0.000000 0.000000 0.000000
+Kd 0.317647 0.317647 0.325490
+Ks 0.330000 0.330000 0.330000
+map_Kd rijksmuseum/Material_12.jpg
+
+newmtl Material_32
+Ka 0.000000 0.000000 0.000000
+Kd 0.552941 0.584314 0.615686
+Ks 0.330000 0.330000 0.330000
+map_Kd rijksmuseum/Material_32.jpg
+
+newmtl Google_Earth_Snapshot2
+Ka 0.000000 0.000000 0.000000
+Kd 0.572549 0.600000 0.552941
+Ks 0.330000 0.330000 0.330000
+map_Kd rijksmuseum/Google_Earth_Snapshot2.jpg
+
+newmtl Material_31
+Ka 0.000000 0.000000 0.000000
+Kd 0.552941 0.584314 0.615686
+Ks 0.330000 0.330000 0.330000
+map_Kd rijksmuseum/Material_31.jpg
+
+newmtl Material_25
+Ka 0.000000 0.000000 0.000000
+Kd 0.474510 0.427451 0.407843
+Ks 0.330000 0.330000 0.330000
+map_Kd rijksmuseum/Material_25.jpg
+
+newmtl rma10_1
+Ka 0.000000 0.000000 0.000000
+Kd 0.505882 0.592157 0.611765
+Ks 0.330000 0.330000 0.330000
+map_Kd rijksmuseum/rma10_1.jpg
+
+newmtl Google_Earth_Snapshot1
+Ka 0.000000 0.000000 0.000000
+Kd 0.572549 0.600000 0.552941
+Ks 0.330000 0.330000 0.330000
+map_Kd rijksmuseum/Google_Earth_Snapshot1.jpg
+
+newmtl Material_24
+Ka 0.000000 0.000000 0.000000
+Kd 0.423529 0.368627 0.321569
+Ks 0.330000 0.330000 0.330000
+map_Kd rijksmuseum/Material_24.jpg
+
+newmtl Material_23
+Ka 0.000000 0.000000 0.000000
+Kd 0.423529 0.368627 0.321569
+Ks 0.330000 0.330000 0.330000
+map_Kd rijksmuseum/Material_23.jpg
+
+newmtl rma9
+Ka 0.000000 0.000000 0.000000
+Kd 0.501961 0.478431 0.486275
+Ks 0.330000 0.330000 0.330000
+map_Kd rijksmuseum/rma9.png
+
+newmtl rma9_1_
+Ka 0.000000 0.000000 0.000000
+Kd 0.501961 0.478431 0.486275
+Ks 0.330000 0.330000 0.330000
+map_Kd rijksmuseum/rma9_1_.png
+
+newmtl rma9_2_
+Ka 0.000000 0.000000 0.000000
+Kd 0.501961 0.478431 0.486275
+Ks 0.330000 0.330000 0.330000
+map_Kd rijksmuseum/rma9_2_.png
+
+newmtl rma9_3_
+Ka 0.000000 0.000000 0.000000
+Kd 0.501961 0.478431 0.486275
+Ks 0.330000 0.330000 0.330000
+map_Kd rijksmuseum/rma9_3_.png
+
+newmtl Material_26
+Ka 0.000000 0.000000 0.000000
+Kd 0.509804 0.447059 0.435294
+Ks 0.330000 0.330000 0.330000
+map_Kd rijksmuseum/Material_26.jpg
+
+newmtl Material_28
+Ka 0.000000 0.000000 0.000000
+Kd 0.470588 0.423529 0.407843
+Ks 0.330000 0.330000 0.330000
+map_Kd rijksmuseum/Material_28.jpg
+
+newmtl rma9_4_
+Ka 0.000000 0.000000 0.000000
+Kd 0.501961 0.478431 0.486275
+Ks 0.330000 0.330000 0.330000
+map_Kd rijksmuseum/rma9_4_.png
+
