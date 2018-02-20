@@ -14,6 +14,7 @@ global {
 	file shape_file_stops <- file('../includes/pt_related/stops.shp');
 	graph tram_network;
 	graph metro_network;
+	
 	list<string> tram_numbers <- ["01","02","03","04","05","07","09","10","12","13","14","17","24","26"];
 	list<string> metro_numbers <- ["50", "51", "53","54"];
 	
@@ -33,7 +34,12 @@ global {
 			create tram number:1{
 			
 			my_lijn <- i;
+			
 			 my_stop <- one_of(stops where (each.type="Terminal" and each.modality="Tram" and each.lijns contains my_lijn  ));
+			 my_list_of_stops <-(stops - my_stop) where(each.lijns contains my_lijn);
+			 write i + "--"+ my_list_of_stops;
+			 my_list_of_stops <- my_list_of_stops sort_by (distance_to(my_stop,each.location));
+			  write i + "___"+ my_list_of_stops;
 			// write "my lijn is " + my_lijn  + " and stop is a " + my_stop.type;
 			 location <-my_stop.location;
 			 my_terminal <- one_of((stops-my_stop) where (each.type="Terminal" and each.modality="Tram" and each.lijns contains my_lijn ));
@@ -55,16 +61,69 @@ global {
 		tram_network <- as_edge_graph(shape_file_tram);
 		metro_network <- as_edge_graph(shape_file_metro);
 	}
+	
+	
+	reflex create_trams when:every(15#mn) and between(list(current_date)[3], 4,8) {
+		loop i over:tram_numbers{
+			create tram number:1{
+			
+			my_lijn <- i;
+			
+			 my_stop <- one_of(stops where (each.type="Terminal" and each.modality="Tram" and each.lijns contains my_lijn  ));
+			 my_list_of_stops <-(stops - my_stop) where(each.lijns contains my_lijn);
+			 write i + "--"+ my_list_of_stops;
+			 my_list_of_stops <- my_list_of_stops sort_by (distance_to(my_stop,each.location));
+			  write i + "___"+ my_list_of_stops;
+			// write "my lijn is " + my_lijn  + " and stop is a " + my_stop.type;
+			 location <-my_stop.location;
+			 my_terminal <- one_of((stops-my_stop) where (each.type="Terminal" and each.modality="Tram" and each.lijns contains my_lijn ));
+		}
+		}
+	}
+	
+	reflex create_metros when:every(15#mn) and between(list(current_date)[3], 4,18) {
+		loop i over:metro_numbers{
+			create metro number:1{
+				my_lijn <- i;
+				my_stop <- one_of(stops where (each.type="Terminal" and each.modality="Metro" and each.lijns contains my_lijn  ));
+			// write "my lijn is " + my_lijn  + " and stop is a " + my_stop.type;
+			 location <-my_stop.location;
+			 my_terminal <- one_of((stops-my_stop) where (each.type="Terminal" and each.modality="Metro" and each.lijns contains my_lijn ));
+				
+			}
+		}
+	}
 }
 
 species tram skills:[moving]{
 	string my_lijn ;//<- one_of([])
 	stops my_stop ;
 	stops my_terminal ;
+	list<stops> my_list_of_stops ;
+	
+	init{
+		
+	}
 	
 	reflex gotravel{
+		//write my_list_of_stops;
+		point my_target;
+		if  !empty(my_list_of_stops){
+			my_target <- any_location_in(my_list_of_stops[0]); 
+		}
 		
-		do goto target:my_terminal speed:4.0#m/#s on:tram_network;
+		//write my_target;
+		do goto target:my_target speed:4.0#m/#s on:tram_network;
+		if (my_list_of_stops[0] covers self) and length(my_list_of_stops)>1 {
+			my_list_of_stops <- my_list_of_stops - first(my_list_of_stops);
+			write "i am at the stop";
+		
+		}
+		
+		if my_terminal covers self{
+			do die;
+		}
+		//write my_list_of_stops;
 		//do goto target:stops closest_to self speed:4.0 on:tram_network;
 	}
 	
@@ -78,12 +137,7 @@ species tram skills:[moving]{
 	}
 }
 
-species tram_trail mirrors:tram{
-	point location <-target.location update: point(target.location.x, target.location.y, target.location.z+150);
-	aspect trail{
-		draw sphere(130) color:#blue;
-	}
-}
+
 species metro skills:[moving]{
 	stops my_stop ;//<- one_of(stops where (each.type="Terminal" and each.modality="Metro"));
 	stops my_terminal;// <- one_of(stops where (each.type="Terminal" and each.modality="Metro"));
@@ -99,6 +153,11 @@ species metro skills:[moving]{
 		//draw obj_file("../includes/pt_related/turn_amsmetro_sweden.obj", 90::{-1,0,0})  at: location + {0,0,-30.0} size: 420.0  rotate: heading;
 		//draw obj_file("../includes/pt_related/ams_metro.obj", 90::{-1,0,0})  at: location + {0,0,-30.0} size: 20.0 color: rgb(#blue,0.5) rotate: heading;
 		draw link(self.location, my_terminal.location) color:#red size:50;
+		
+		if between(list(current_date)[3], 12,18){
+			
+		draw circle(150) color:rgb(#orange,0.3);
+		}
 	}
 }
 species stops{
@@ -116,18 +175,19 @@ species stops{
 		lijns <- split_with(lijn, "|");
 	}
 	
-	reflex update_info{
+	reflex update_info when:!empty(tram){
 		closest_tram <- tram closest_to self;
 		infor <- closest_tram.my_lijn;
-		write infor;
+		//write infor;
 	}
 		aspect a{
 		colors<- type="Terminal"? #red:#green;
-		draw cylinder(2,50) color:colors ;
+		draw cylinder(20,50) color:colors ;
+		draw string(int(self)) color:#black  font: font('Helvetica Neue', 12, # bold + # italic);
 		//draw lijn color:#black size:50;
 		//draw string(lijns) color:#black at: location+ {0,0,50}  perspective:false ;
 		
-		draw ("Next Tram: " + infor + " minutes " + closest_tram) color:#red at: location+ {0,0,55}  perspective:false  font: font('Helvetica Neue', 12, # bold + # italic);
+		//draw ("Next Tram: " + infor + " minutes " + closest_tram) color:#red at: location+ {0,0,55}  perspective:false  font: font('Helvetica Neue', 12, # bold + # italic);
 	}
 }
 species tramlines{
@@ -148,14 +208,14 @@ experiment ptModel type: gui {
 	/** Insert here the definition of the input and output of the model */
 	float minimum_cycle_duration <-0.4;
 	output {
-		display "2d" type:opengl camera_pos: tram[12].location + {0,0,10} camera_look_pos: tram[12].location + 10{
+		display "2d" type:java2D {
 			
 			species metro aspect:a;
 			species metrolines aspect:a refresh:false ;
 			species tramlines aspect:a refresh:false;
 			species stops aspect:a refresh:false;
 			species tram aspect:a ;
-			species tram_trail aspect:trail transparency:0.7;
+			
 			
 //			graphics "g" {
 //				draw obj_file("../includes/landmarks/station/edited_station.obj", 90::{-1,0,0}) size:1500 at: {4850,1650,0}+ {0,0,61.0}   ;
