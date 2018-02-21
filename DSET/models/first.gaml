@@ -139,10 +139,10 @@ species inhabitants schedules: shuffle(inhabitants)
 	float my_travel_time <- my_travel_distance / mode_speed[my_mode_actual];
 	float my_aspiration;
 	
-	
+	list<inhabitants> my_peers;
 	
 	//buildings home;
-	list<inhabitants> my_peers;
+	
 	buildings my_home <- one_of(buildings where (each.use = "residential"));
 	// check location below  if any error, this could be a possible error in rare cases
 	point location <- my_home.location;
@@ -158,8 +158,31 @@ species inhabitants schedules: shuffle(inhabitants)
 	float my_overall_needs_satisfaction;
 
 
-
+	// BEHAVIOR STRATEGY
 	
+	//------------------- IMITATE
+	
+	int imitates{
+		list<inhabitants> peers_to_learn;
+		int mode;
+		// what are peers doing;
+		list<int> peer_modes <- my_peers collect (each.value_mode_actual);
+		
+		
+		return mode;
+	}
+	
+	
+	//-------------------  REPEAT
+	int repeats{
+		int mode <- value_mode_actual;
+		return mode;
+		
+	}
+	
+	//------------------- INQUIRE
+	
+	//------------------- OPTIMIZE
 	
 	
 	init

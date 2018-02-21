@@ -13,13 +13,14 @@ global {
 	
 	file airbnb_extent <- file('../includes/airbnb_related/airbnb3extent.shp');
 	file airbnb_data <- file('../includes/airbnb_related/airbnb3.shp');
-	file road_ring <- file('../includes/roads/nwb.shp');
+	file road_ring <- file('../includes/roads/network_extended_RD.shp');
 	file shape_file_streets <- file("../includes/ped_network.shp");
 	file shape_file_bounds <- file("../includes/Boundary_study_area_rough.shp");
-	file shape_buildings <- file("../includes/Buildings_Amsterdam.shp");
+	file shape_buildings <- file("../includes/airbnb_related/ringBuildings.shp");
+	//file shape_buildings <- file("../includes/Buildings_Amsterdam.shp");
 	
 	date starting_date <- date("2008-02-22 00:00:00");
-	float step <- 10#day;
+	float step <- 5#day;
 	
 	geometry shape <- envelope(airbnb_extent);
 	
@@ -73,7 +74,7 @@ species airbnb {
 		if visible{
 //			draw circle(150) color: rgb(#yellow,0.01) ; 
 //			draw circle(100) color: rgb(#orange,0.05) ; 
-			draw circle(50) color: rgb(#red,0.1) ; 
+			draw circle(50) color: rgb(#yellow,0.1) perspective:false ; 
 		}
 		
 	}
@@ -95,14 +96,16 @@ experiment name type: gui {
 	
 	// inspect one_or_several_agents;
 	//
-	 display "My display"  type:opengl{ 
+	 display "My display"  type:opengl background:#black{ 
 			
-			graphics "roads"{
+			graphics "roads" {
 			//	draw shape_file_streets color:#black;
-				draw shape_buildings color:rgb(#green, 0.3);
-				draw road_ring color:rgb(#gray,0.1);
+				draw shape_buildings color:rgb(#green) depth:rnd(100);
+				draw road_ring color:rgb(#gray,0.2) ;
+				draw string(current_date, "dd-MM-yyyy") at:{10000,10000} color: # yellow font: font('Helvetica Neue', 32,   # italic);
 			}
-			species airbnb ;
+			species airbnb  ;
+			
 	 		 }
 
 	}

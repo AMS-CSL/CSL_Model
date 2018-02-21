@@ -20,7 +20,7 @@ global {
 	
 	
 	
-	date starting_date <- date("2018-02-22 05:00:00");
+	date starting_date <- date("2018-02-22 15:00:00");
 	float step <- 1#mn;
 	
 	geometry shape <- envelope(shape_file_stops);
@@ -63,7 +63,7 @@ global {
 	}
 	
 	
-	reflex create_trams when:every(15#mn) and between(list(current_date)[3], 4,8) {
+	reflex create_trams when:every(15#mn) and between(list(current_date)[3], 4,18) {
 		loop i over:tram_numbers{
 			create tram number:1{
 			
@@ -128,12 +128,25 @@ species tram skills:[moving]{
 	}
 	
 	
-	aspect a{
-		draw circle(150) color:#blue depth:10;
-		//draw obj_file("../includes/pt_related/small_tram.obj", 90::{-1,0,0}) at: location + {0,0,30.0} size: 130.0  rotate: heading;
-		//draw rectangle(150,20) color:#red    rotate: heading;
-	draw link(self.location, my_terminal.location) color:#black size:50;
-	draw my_lijn color:#white size:50;
+	aspect a
+	{
+		if between(list(current_date)[3], 12,20)
+		{
+			draw circle(30) color: #white;
+			draw arc(550, heading, 45, true) color:rgb(#yellow,0.7);
+//			loop i from:100 to:190 step:20{
+//				draw arc(i, heading, 45, true) color:rgb(#yellow,0.5);
+//			}
+		} else
+		{
+			draw circle(150) color: # blue;
+			//draw obj_file("../includes/pt_related/small_tram.obj", 90::{-1,0,0}) at: location + {0,0,30.0} size: 130.0  rotate: heading;
+			//draw rectangle(150,20) color:#red    rotate: heading;
+			draw link(self.location, my_terminal.location) color: # black size: 50;
+			draw my_lijn color: # white size: 50;
+			
+		}
+
 	}
 }
 
@@ -148,16 +161,20 @@ species metro skills:[moving]{
 	}
 	
 	
-	aspect a{
-		draw rectangle(250,75) color:#red depth:10 rotate:heading;
-		//draw obj_file("../includes/pt_related/turn_amsmetro_sweden.obj", 90::{-1,0,0})  at: location + {0,0,-30.0} size: 420.0  rotate: heading;
-		//draw obj_file("../includes/pt_related/ams_metro.obj", 90::{-1,0,0})  at: location + {0,0,-30.0} size: 20.0 color: rgb(#blue,0.5) rotate: heading;
-		draw link(self.location, my_terminal.location) color:#red size:50;
-		
-		if between(list(current_date)[3], 12,18){
-			
-		draw circle(150) color:rgb(#orange,0.3);
+	aspect a
+	{
+		if between(list(current_date)[3], 12, 18)
+		{
+			draw rectangle(250,75) color: rgb(# yellow) rotate:heading ;
+			draw arc(50,50,50) color:rgb(#yellow,0.4) rotate:heading;
+		} else
+		{
+			draw rectangle(250, 75) color: # red depth: 10 rotate: heading;
+			//draw obj_file("../includes/pt_related/turn_amsmetro_sweden.obj", 90::{-1,0,0})  at: location + {0,0,-30.0} size: 420.0  rotate: heading;
+			//draw obj_file("../includes/pt_related/ams_metro.obj", 90::{-1,0,0})  at: location + {0,0,-30.0} size: 20.0 color: rgb(#blue,0.5) rotate: heading;
+			draw link(self.location, my_terminal.location) color: # red size: 50;
 		}
+
 	}
 }
 species stops{
@@ -198,7 +215,7 @@ species tramlines{
 
 species metrolines{
 	aspect a{
-		draw shape+15 color:#red;
+		draw shape+15 color:#green;
 		
 	}
 }
@@ -208,7 +225,7 @@ experiment ptModel type: gui {
 	/** Insert here the definition of the input and output of the model */
 	float minimum_cycle_duration <-0.4;
 	output {
-		display "2d" type:java2D {
+		display "2d" type:java2D background:between(list(current_date)[3], 12,20)?rgb(#black):rgb(#white){
 			
 			species metro aspect:a;
 			species metrolines aspect:a refresh:false ;
