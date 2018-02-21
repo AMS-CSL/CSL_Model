@@ -21,4 +21,4 @@ This will subsequently contain deployable models.
 
 #### Airbnb evolution for 10 years.
 
-![Airbnb Evolution](/DATA/git/airbnb.gif)
+![Airbnb Evolution](/DATA/gif/airbnb.gif)
