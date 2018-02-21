@@ -15,5 +15,10 @@ This folder contains the GAMA model.
 
 ### Releases
 
-This will subsequently contain deployable models. 
+This will subsequently contain deployable models.
 
+### Model Visualization
+
+#### Airbnb evolution for 10 years.
+
+![Airbnb Evolution](/DATA/git/airbnb.gif)
