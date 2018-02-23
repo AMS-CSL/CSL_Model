@@ -19,4 +19,9 @@ global{
 		return last(previous,a_list);
 	}
 	
+	list<string> get_names(list<agent> gn){
+		list<string> gnn <- gn accumulate (each.name);
+		return gnn;
+	}
+	
 }

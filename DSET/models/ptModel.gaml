@@ -132,8 +132,8 @@ species tram skills:[moving]{
 	{
 		if between(list(current_date)[3], 12,20)
 		{
-			draw circle(30) color: #white;
-			draw arc(550, heading, 45, true) color:rgb(#yellow,0.7);
+			draw circle(50) color: rgb(#white,0.7);
+			//draw arc(550, heading, 45, true) color:rgb(#yellow,0.7);
 //			loop i from:100 to:190 step:20{
 //				draw arc(i, heading, 45, true) color:rgb(#yellow,0.5);
 //			}
@@ -232,7 +232,11 @@ experiment ptModel type: gui {
 			species tramlines aspect:a refresh:false;
 			species stops aspect:a refresh:false;
 			species tram aspect:a ;
-			
+			graphics "Info Text" refresh:true {
+				draw string(current_date, "dd-MM-yyyy HH:mm:ss") at:{8000,11500} color: # yellow font: font('Helvetica Neue', 32,   # italic) ;
+				draw string("Amsterdam Tram and Metro Network") at:{8000,12000} color: # yellow font: font('Helvetica Neue', 22,   # italic) ;
+				draw string(" CSL Project - Wageningen") at:{8000,12500} color: # yellow font: font('Helvetica Neue', 12,   # italic) ;
+			}
 			
 //			graphics "g" {
 //				draw obj_file("../includes/landmarks/station/edited_station.obj", 90::{-1,0,0}) size:1500 at: {4850,1650,0}+ {0,0,61.0}   ;

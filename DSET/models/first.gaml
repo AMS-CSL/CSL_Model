@@ -6,13 +6,23 @@
 * draw string("Off_" + int(self)) color: # white font: font('Helvetica Neue', 12, # bold + # italic);
 */
 model model1
-import "../includes/dset_library.gaml"
+import "dset_functions_library.gaml"
+import "behavior.gaml"
+import "ptModel.gaml"
 
 global
 {
+	
+	
+	
+date starting_date <- date("2008-02-22 00:00:00");
+float step <-1 #mn;
+
+
+
 
 // THE ENVIRONMENT 
-	file shape_file_streets <- file("../includes/ped_network.shp");
+	file shape_file_streets <- file('../includes/roads/network_extended_RD.shp');
 	file shape_file_bounds <- file("../includes/Boundary_study_area_rough.shp");
 	file shape_buildings <- file("../includes/Buildings_Amsterdam.shp");
 	geometry shape <- envelope(shape_file_bounds);
@@ -24,11 +34,33 @@ global
 	int inhabitant_population <- 10;
 //TODO check if this below  should be global or agent specific
 	float max_travel_mode_difference <-3.0;
+	
+	
+	
+	
+// GLOBAL VARIABLES FOR NEEDS CALCULATION
+float inhabitant_relative_importance_existence_need <- 0.33;
+float inhabitant_relative_importance_social_need <- 0.33;
+float inhabitant_relative_importance_persoanl_need <- 0.33;
+
+//GLOBAL VARIABLES FOR MOBILITY  page 119 mobility report amsterdam in cijfers 2016
+list<int> work_pt_km <- [19,20];
+list<int> work_auto_km <-[20,20];
+list<int> work_bike_km <- [4,5];
+list<int> work_pt_min <- [45,55];
+list<int> work_auto_min <-[28,41];
+list<int> work_bike_min <- [19,23];
+
+
+
+//
+
+	
 
 	/** Insert the global definitions, variables and actions here */
-	list<string> modes <- ["bike", "walk", "publictransport", "car"];
-	map<string, int> mode_speed <- ["bike"::15, "walk"::4, "publictransport"::40, "car"::60];
-	map<string, int> mode_value <- ["bike"::1, "walk"::2, "publictransport"::3, "car"::4];
+	list<string> modes <- ["bike", "walk", "pt", "car"];
+	map<string, int> mode_speed <- ["bike"::15, "walk"::4, "pt"::40, "car"::60];
+	map<string, int> mode_value <- ["bike"::1, "walk"::2, "pt"::3, "car"::4];
 	//	list<string> maps <- mode_speed.keys;
 	//geometry shape <- square(5 # km);
 	init
@@ -66,7 +98,6 @@ global
 		map<buildings, int> bm <- [buildings[1]::4, buildings[8]::2, buildings[3]::3];
 		//write bm.keys where (bm[each] > 2);
 	}
-
 }
 
 species buildings
@@ -98,11 +129,9 @@ species buildings
 		{
 			my_color <- rgb(# brown, 0.2);
 		}
-
 		draw shape color: my_color depth: building_height;
 		draw shape color: my_color at: { location.x, location.y, building_height };
 	}
-
 }
 
 species roads
@@ -115,7 +144,6 @@ species roads
 	{
 		draw shape color: # gray;
 	}
-
 }
 
 species study_area
@@ -124,11 +152,17 @@ species study_area
 	{
 		draw shape color: rgb(# wheat, 0.1);
 	}
-
 }
 
 species inhabitants schedules: shuffle(inhabitants)
 {
+	
+// GLOBAL ATTRIBUTES FOR EACH AGENT
+float ambition_level <- rnd(1.0);
+float uncertainty_tolerance_level <- rnd(1.0);
+int cognitive_effort <- 5;
+
+	
 // TRAVEL ATTRIBUTES
 	string my_mode_preferred <- one_of(modes);
 	string my_mode_actual <- one_of(modes);
@@ -151,49 +185,209 @@ species inhabitants schedules: shuffle(inhabitants)
 	
 	
 
-	//NEEDS
+	//ATTRIBUTES FOR NEEDS
 	float my_need_social;
 	float my_need_personal;
 	float my_need_existence;
 	float my_overall_needs_satisfaction;
+	float superior_to_peers_ratio;
 
 
-	// BEHAVIOR STRATEGY
+
+
+
+// UNCERTAINTY MODEL
+// Agents have uncertainty from 1) difference between their travel speed expectation and that of their peers 2) difference between their current travel mode and their peers.
+//calculation factor 1
+//
+
+ list<float> memory_bike_times ;
+ list<float> memory_walk_times;
+ list<float> memory_pt_times ;
+ list<float> memory_auto_times ;
+ map<string,float> my_expected_travel_time_all_modes <- ["bike"::0.0,"walk"::0.0,"pt"::0.0, "car"::0.0];
+ map<string,float> my_uncertainty_travel_time_all_modes <- ["bike"::0.0,"walk"::0.0,"pt"::0.0, "car"::0.0];
+
+ //function to assign initial memory of travel times
+ action assign_initial_cognitive_memory{
 	
-	//------------------- IMITATE
+  memory_bike_times <-list_with(cognitive_effort,distance_between(topology(world),[my_home, my_office])/rnd(mode_speed["bike"]+2,mode_speed["bike"]-2));
+  memory_walk_times <-list_with(cognitive_effort, distance_between(topology(world),[my_home, my_office])/rnd(mode_speed["walk"]+1,mode_speed["walk"]-1));
+  memory_pt_times <-list_with(cognitive_effort, distance_between(topology(world),[my_home, my_office])/rnd(mode_speed["pt"]+15,mode_speed["pt"]-15));
+  memory_auto_times <-list_with(cognitive_effort,distance_between(topology(world),[my_home, my_office])/rnd(mode_speed["car"]+10,mode_speed["car"]-10));
+}
+ 
+ // function to get travel time for a given mode = expected travel time for next trip as per the model
+ float get_expected_travel_time_for_a_mode (inhabitants i, int mode)
+{
+	float travel_time;
+	switch mode
+	{
+		match 1
+		{
+			travel_time <- gauss(mean(i.memory_bike_times), standard_deviation(i.memory_bike_times));
+		}
+
+		match 2
+		{
+			travel_time <- gauss(mean(i.memory_walk_times), standard_deviation(i.memory_walk_times));
+		}
+
+		match 3
+		{
+			travel_time <- gauss(mean(i.memory_pt_times), standard_deviation(i.memory_pt_times));
+		}
+
+		match 4
+		{
+			travel_time <- gauss(mean(i.memory_auto_times), standard_deviation(i.memory_auto_times));
+		}
+	}
+	return travel_time;
+}
+
+//function to get expected time for all modes, argument = self
+map get_expected_travel_time_for_all_modes (inhabitants i)
+{
+	map<string, float> expected_travel_time_all_modes;
+	expected_travel_time_all_modes["bike"] <- gauss(mean(i.memory_bike_times), standard_deviation(i.memory_bike_times));
+	expected_travel_time_all_modes["walk"] <- gauss(mean(i.memory_walk_times), standard_deviation(i.memory_walk_times));
+	expected_travel_time_all_modes["pt"] <- gauss(mean(i.memory_pt_times), standard_deviation(i.memory_pt_times));
+	expected_travel_time_all_modes["car"] <- gauss(mean(i.memory_auto_times), standard_deviation(i.memory_auto_times));
+	return expected_travel_time_all_modes;
+}
+
+ //function to get uncertainty factor for travel times for all modes, argument = self
+map get_uncertainty_travel_time_for_all_modes (inhabitants i){
+	map<string, float> my_uncertainty_cov;
 	
-	int imitates{
-		list<inhabitants> peers_to_learn;
+	list<float> peers_and_self_travel_time_bike <-i.my_peers accumulate (each.my_expected_travel_time_all_modes["bike"]);
+	add i.my_expected_travel_time_all_modes["bike"] to:peers_and_self_travel_time_bike;
+	my_uncertainty_cov["bike"]<-standard_deviation(peers_and_self_travel_time_bike)/mean(peers_and_self_travel_time_bike);
+	
+	list<float> peers_and_self_travel_time_walk <-i.my_peers accumulate (each.my_expected_travel_time_all_modes["bike"]);
+	add i.my_expected_travel_time_all_modes["bike"] to:peers_and_self_travel_time_walk;
+	my_uncertainty_cov["walk"]<-standard_deviation(peers_and_self_travel_time_walk)/mean(peers_and_self_travel_time_walk);
+	
+	list<float> peers_and_self_travel_time_pt <-i.my_peers accumulate (each.my_expected_travel_time_all_modes["bike"]);
+	add i.my_expected_travel_time_all_modes["bike"] to:peers_and_self_travel_time_pt;
+	my_uncertainty_cov["pt"]<-standard_deviation(peers_and_self_travel_time_pt)/mean(peers_and_self_travel_time_pt);
+	
+	list<float> peers_and_self_travel_time_car <-i.my_peers accumulate (each.my_expected_travel_time_all_modes["bike"]);
+	add i.my_expected_travel_time_all_modes["bike"] to:peers_and_self_travel_time_car;
+	my_uncertainty_cov["car"]<-standard_deviation(peers_and_self_travel_time_car)/mean(peers_and_self_travel_time_car);
+	
+	return my_uncertainty_cov;
+	
+}
+ 
+//
+//action calculate_ratio_uncertainty_uncertainty_tolerance_level {
+//	if (inhabitant_uncertainty > inhabitant_uncertainty_tolerance)
+//	{
+//		inhabitant_uncertainty_ratio <- 0.75;
+//	} 
+//	else {
+//		inhabitant_uncertainty_ratio <-0.25;
+//	}
+//}
+
+
+
+
+
+
+//BEHAVIOR MODEL
+
+
+	// ATTRIBUTES FOR BEHAVIOR STRATEGY
+	float overall_need_satisfaction_aspiration_level_ratio;
+	float uncertainty_tolerance_level_ratio;
+	string my_behavior;
+	
+	
+	
+	
+	//------------------- IMITATE (parameter coming into this function = self)
+	// what does it do? = adopts the mode that is most used by peers
+	int imitates (inhabitants i){
 		int mode;
 		// what are peers doing;
-		list<int> peer_modes <- my_peers collect (each.value_mode_actual);
-		
-		
+		list<int> peer_modes <- i.my_peers collect (each.value_mode_actual);
+		map<int, list<int>> m <- group_by(peer_modes, (each));
+		list<int> counts <- m.values accumulate length(each);
+		mode <- m.keys at (counts index_of max(counts)); //get the most used mode.
 		return mode;
 	}
 	
 	
-	//-------------------  REPEAT
-	int repeats{
-		int mode <- value_mode_actual;
+	//-------------------  REPEAT  ( parameter coming into this function  = self)
+	// what does it do ? = just continues with the mode from previous step 
+	int repeats (inhabitants i){
+		int mode <- i.value_mode_actual;
 		return mode;
-		
 	}
 	
-	//------------------- INQUIRE
+	//------------------- INQUIRE ( parameter coming into this function  = self) 
+	// what does it do? it first lists all the models being used by the population, then checks what is more suitable than current choice
+	 int inquires (inhabitants i){
+	 	int mode;
+		
+		list<int> peer_modes <- i.my_peers collect (each.value_mode_actual);// what are peers using;
+//FIXME correct this return value below		
+		return 10;
+	 }
 	
-	//------------------- OPTIMIZE
+	
+	//------------------- OPTIMIZE ( parameter coming into this function  = self) 
+	// what does it do? = it collects all possible choices (used or unused) by the population, then check what is more suitable than current choice
+	
+	
+	
+	
+	
+	// SUB PROCEDURES
+	// input to this function is agent and mode number
+//FIXME  I have no idea why this is called current peers while we take no value from the peers	
+	action sub_potential_personal_need_satisfaction (inhabitants i, int mode){
+		float relative_diff_to_current_peers_travel_mode <- (mode - i.value_mode_preferred  = 0)?0.0:(abs(i.value_mode_preferred-i.value_mode_actual)/3.0);
+		return relative_diff_to_current_peers_travel_mode;
+	}
+	
+	action sub_potential_social_need_satisfaction (inhabitants i, int mode){
+		float potential_similarity_with_travel_mode <- length(i.my_peers where (each.value_mode_actual = mode))/ length(i.my_peers);
+		float potential_social_need_satisfaction_travel_mode <- (potential_similarity_with_travel_mode + i.superior_to_peers_ratio)/2.0;
+	}
+	
+	action sub_potential_existence_need_satisfaction(inhabitants i, int mode){
+	}
+	
+//	action sub_potential_overall_need_satisfaction(inhabitants i, int mode){
+//		float inhabitants_potential_overall_need_satisfaction <- 
+//		(inhabitant_relative_importance_existence_need * inhabitant_potential_existence_need_satisfaction)+
+//		(inhabitant_relative_importance_social_need * inhabitant_potential_social_need_satisfaction)+
+//		(inhabitant_relative_importance_persoanl_need * inhabitant_potetial_personal_need_satisfaction);
+//	}
 	
 	
 	init
 	{
 	//do select_peers;
 		do assess_peer_differences(list(inhabitants), distance_between_homes, relative_work_work_distance);
+		do assign_initial_cognitive_memory;
 		do calculate_social_need;
 		my_need_personal <- calculate_personal_need();
 		do calculate_existence_need;
 		my_overall_needs_satisfaction <- 1.0;
+		write world.get_behavior(overall_need_satisfaction_aspiration_level_ratio,uncertainty_tolerance_level_ratio);
 	}
+	
+	
+	reflex get_inhabitant_behavior{
+		//my_behavior <- get_behavior(self);
+	}
+	
+	
 	
 	
 // FUNCTION TO GET PEERS
@@ -319,9 +513,15 @@ species inhabitants schedules: shuffle(inhabitants)
 		return my_peers;
 	}
 
+
+
+
+//------------------------------------------------------------CALCULATE SUPERIORITY ----------------------------------------------------------
+//TODO check for travel speed and travel distance conflicts, currently it is all random numbers
+
 	float calculate_superiority(list<inhabitants> _peers)
 	{
-//TODO check for travel speed and travel distance conflicts, currently it is all random numbers
+
 		list<float> difference_with_my_peers <- _peers collect (each.my_travel_time - self.my_travel_time);
 		//write difference_with_my_peers;
 		if my_travel_time > mean(_peers collect (each.my_travel_time)){
@@ -330,8 +530,14 @@ species inhabitants schedules: shuffle(inhabitants)
 		else{
 			return self.my_travel_time/mean(_peers collect (each.my_travel_time));
 		}
-		
 	}
+
+
+
+
+
+//------------------------------------------------------------CALCULATE SIMILARITY ----------------------------------------------------------
+
 
 	float calculate_similarity (list<inhabitants> _peers)
 	{
@@ -341,12 +547,19 @@ species inhabitants schedules: shuffle(inhabitants)
 		list<float> difference_with_my_peers <- (_peers collect (abs(each.value_mode_actual - self.value_mode_actual))) collect (each/max_travel_mode_difference); //absolute difference
 		//write difference_with_my_peers;
 		if sum(difference_with_my_peers) = 0{
-			return  0.0;
+			superior_to_peers_ratio <-  0.0;
 		} else {
-			return  sum(difference_with_my_peers)/length(_peers);
+			superior_to_peers_ratio<-  sum(difference_with_my_peers)/length(_peers);
 		}
-		
+		return superior_to_peers_ratio;
 	}
+			
+
+
+//NEEDS MODEL
+//------------------------------------------------------------SOCIAL NEEDS ----------------------------------------------------------
+
+
 
 	action calculate_social_need
 	{
@@ -357,19 +570,26 @@ species inhabitants schedules: shuffle(inhabitants)
 		my_need_social <- (similarity_value + superiority_value)/2;
 		write my_need_social;
 	}
-	
-	
+//------------------------------------------------------------PERSONAL NEEDS ----------------------------------------------------------
+
+
 
 	float calculate_personal_need
 	{
-		float relative_diff_to_current_peers <-value_mode_preferred - value_mode_actual = 0?0.0:(abs(value_mode_preferred-value_mode_actual)/3.0);
-		return relative_diff_to_current_peers;
-	}
+//FIXME i have set max mode difference to 3, because modes range from [1-4]
+		float relative_diff_to_current_peers_travel_mode <-value_mode_preferred - value_mode_actual = 0?0.0:(abs(value_mode_preferred-value_mode_actual)/3.0);
+		return relative_diff_to_current_peers_travel_mode;
+			}
 
 	action calculate_existence_need
 	{
 	}
 
+
+
+
+
+//------------------------------------------------------------ASPECTS ----------------------------------------------------------
 	aspect a
 	{
 		if !empty(my_peers)
@@ -387,12 +607,16 @@ species inhabitants schedules: shuffle(inhabitants)
 			draw circle(20) color: rgb((modes index_of (my_mode_actual)) * 60, 0, 0);
 			draw string(int(self)) color: # white font: font('Helvetica Neue', 12, # bold);
 		}
-
 	}
 
 }
 
-experiment model1 type: gui
+
+
+
+// 																EXPERIMENT SECTION
+//------------------------------------------------------------------------------------------
+experiment "Main Model" type: gui
 {
 	float seed <- 0.8484812926428652;
 	parameter "Proportion of offices in landuse" var: proportion_of_offices min: 0.0 max: 1.0 step: 0.1 category: "Global Model Parameters";
