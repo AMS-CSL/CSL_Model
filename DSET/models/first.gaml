@@ -649,10 +649,18 @@ action calculate_ratio_uncertainty_uncertainty_tolerance_level (string s){
 	float inhabitant_potential_social_need_satisfaction_travel;
 	
 //FIXME  I have no idea why this is called current peers while we take no value from the peers	
-	action sub_potential_PERSONAL_need_satisfaction (inhabitants i, int mode){
-		float relative_diff_to_current_peers_travel_mode <- (mode - i.value_mode_preferred  = 0)?0.0:(abs(i.value_mode_preferred-i.value_mode_actual)/3.0);
-		return relative_diff_to_current_peers_travel_mode;
+	float sub_potential_PERSONAL_need_satisfaction (inhabitants i, int mode){
+		float potential_personal_need_statisfaction;
+		if (abs(mode - i.value_mode_preferred) = 0){
+			 potential_personal_need_statisfaction <- 0.0;
+			}
+			else {
+				 potential_personal_need_statisfaction <- abs( mode - i.value_mode_preferred)/3.0;
+			}
+			return potential_personal_need_statisfaction;
 	}
+	
+	
 	
 	action sub_potential_SOCIAL_need_satisfaction (inhabitants i, int mode){
 		float potential_similarity_with_travel_mode <- length(i.my_peers where (each.value_mode_actual = mode))/ length(i.my_peers);
