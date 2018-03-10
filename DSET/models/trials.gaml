@@ -32,6 +32,7 @@ global {
 		write ln split_in length(distinct(ln)) collect length(each);
 		//write lss split_in length(distinct(lss)) collect length(each);
 		write [1::2, 3::4, 5::6] index_of 6; 
+		//matrix mm<- as_matrix(create_map(ln,ln));
 	}  
 	
 	reflex dosomerhing when: after (start_date add_days 1#day){

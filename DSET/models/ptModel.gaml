@@ -224,6 +224,7 @@ species metrolines{
 experiment ptModel type: gui {
 	/** Insert here the definition of the input and output of the model */
 	float minimum_cycle_duration <-0.4;
+	
 	output {
 		display "2d" type:java2D background:between(list(current_date)[3], 12,20)?rgb(#black):rgb(#white){
 			
