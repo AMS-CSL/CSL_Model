@@ -8,7 +8,7 @@
 model model1
 import "dset_functions_library.gaml"
 import "behavior.gaml"
-import "ptModel.gaml"
+//import "ptModel.gaml"
 
 global
 {
@@ -25,7 +25,7 @@ float step <-1 #mn;
 	file shape_file_streets <- file('../includes/roads/network_extended_RD.shp');
 	file shape_file_bounds <- file("../includes/Boundary_study_area_rough.shp");
 	file shape_buildings <- file("../includes/Buildings_Amsterdam.shp");
-	geometry shape <- envelope(shape_file_bounds);
+	geometry shape <- envelope(shape_buildings);
 
 	// variables for model parameters
 	float proportion_of_offices <- 0.1;
@@ -36,7 +36,9 @@ float step <-1 #mn;
 	float max_travel_mode_difference <-3.0;
 	
 	
-	
+// THIS WILL BE THE GRAPH ON WHICH INHABITANTS WILL TRAVEL
+
+	graph g ;
 	
 // GLOBAL VARIABLES FOR NEEDS CALCULATION
 float inhabitant_relative_importance_existence_need <- 0.33;
@@ -94,6 +96,9 @@ list<int> work_bike_min <- [19,23];
 		//write list(matrix(ia) + matrix(ib));
 		map<buildings, int> bm <- [buildings[1]::4, buildings[8]::2, buildings[3]::3];
 		//write bm.keys where (bm[each] > 2);
+		
+		
+		 g <- as_edge_graph(shape_file_streets);
 	}
 }
 
@@ -139,7 +144,7 @@ species roads
 
 	aspect a
 	{
-		draw shape color: # gray;
+		draw shape+3 color: # gray;
 	}
 }
 
@@ -151,7 +156,7 @@ species study_area
 	}
 }
 
-species inhabitants schedules: shuffle(inhabitants)
+species inhabitants schedules: shuffle(inhabitants) skills:[moving]
 {
 	
 // GLOBAL ATTRIBUTES FOR EACH AGENT
@@ -211,7 +216,9 @@ int cognitive_effort <- 5;
 
 
 
-
+reflex movement {
+	do goto target:my_office on:g speed:1.0;
+}
 
 	
 	
@@ -744,7 +751,7 @@ draw circle(50) color:#red;
 			//draw string(int(self)) color: # white font: font('Helvetica Neue', 12, # bold + # italic);
 			ask my_peers
 			{
-				draw line([self, myself]) color: (# green) ;
+				//draw line([self, myself]) color: (# green) ;
 			}
 
 		} else
@@ -753,6 +760,10 @@ draw circle(50) color:#red;
 			//draw circle(20) color: rgb((modes index_of (my_mode_actual)) * 60, 0, 0);
 			//draw string(int(self)) color: # white font: font('Helvetica Neue', 12, # bold);
 		}
+	}
+	
+	aspect b{
+		draw link(self, my_office) color:#red size:10;
 	}
 
 }
@@ -775,9 +786,10 @@ experiment "Main Model" type: gui
 		display d type: opengl
 		{
 			species study_area aspect: a;
-			species buildings aspect: a;
+			species buildings aspect: a refresh:false;
 			species roads aspect: a;
-			species inhabitants aspect: a position: { 0, 0, 0.051 };
+			species inhabitants aspect: a ;
+			species inhabitants aspect: b;
 		}
 
 	}
