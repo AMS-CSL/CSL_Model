@@ -601,8 +601,8 @@ action calculate_ratio_uncertainty_uncertainty_tolerance_level (string s){
 	float uncertainty_tolerance_level_ratio;
 	string my_behavior;
 	
-	
-	
+	list<float> my_optimize_all_mode;
+	map<int,list<float>> inquiry_per_mode;
 	
 	//------------------- IMITATE (parameter coming into this function = self)
 	// what does it do? = adopts the mode that is most used by peers
@@ -630,6 +630,21 @@ action calculate_ratio_uncertainty_uncertainty_tolerance_level (string s){
 	 	int mode;
 		
 		list<int> peer_modes <- (remove_duplicates(i.my_peers collect (each.value_mode_actual)))-i.my_mode_actual;// what are peers using;
+//FIXME does inhabitant evaluate also own mode here or only of the peers? 		
+		
+		if !empty(peer_modes){
+			loop ii over: peer_modes{
+			list<float> my_inquiry_each_mode_used ;
+			add sub_potential_PERSONAL_need_satisfaction(self, ii) to:my_inquiry_each_mode_used;
+			add sub_potential_EXISTENCE_need_satisfaction(self, ii) to:my_inquiry_each_mode_used;
+			add sub_potential_SOCIAL_need_satisfaction(self, ii) to:my_inquiry_each_mode_used;
+			add sub_potential_OVERALL_need_satisfaction(self, ii) to:my_inquiry_each_mode_used;
+			inquiry_per_mode[ii] <- my_inquiry_each_mode_used; // maps a mode to four sub-procedure results eg. 1::[1,2,3,4]
+		}
+		} else {
+			warn "Agent " + i +  "has no peers to inspire";
+		}
+		
 		
 		return 10; //FIXME correct this return value 	
 	 }
@@ -647,8 +662,9 @@ action calculate_ratio_uncertainty_uncertainty_tolerance_level (string s){
 	list<float> inhabitant_expected_relative_travel_speed_travel_mode;//will contain values for modes 1,2,3,4
 	float inhabitant_potential_existence_need_satisfaction;
 	float inhabitant_potential_social_need_satisfaction_travel;
+	float inhabitant_potential_personal_need_satisfaction_travel;
 	
-//FIXME  I have no idea why this is called current peers while we take no value from the peers	
+
 	float sub_potential_PERSONAL_need_satisfaction (inhabitants i, int mode){
 		float potential_personal_need_statisfaction;
 		if (abs(mode - i.value_mode_preferred) = 0){
@@ -659,15 +675,18 @@ action calculate_ratio_uncertainty_uncertainty_tolerance_level (string s){
 			}
 			return potential_personal_need_statisfaction;
 	}
+
 	
 	
-	
-	action sub_potential_SOCIAL_need_satisfaction (inhabitants i, int mode){
+	float sub_potential_SOCIAL_need_satisfaction (inhabitants i, int mode){
 		float potential_similarity_with_travel_mode <- length(i.my_peers where (each.value_mode_actual = mode))/ length(i.my_peers);
 		inhabitant_potential_social_need_satisfaction_travel <- (potential_similarity_with_travel_mode + i.superior_to_peers_ratio)/2.0;
+		return inhabitant_potential_social_need_satisfaction_travel;
 	}
 	
-	action sub_potential_EXISTENCE_need_satisfaction(inhabitants i, int mode){
+	
+	
+	float sub_potential_EXISTENCE_need_satisfaction(inhabitants i, int mode){
 		inhabitant_expected_relative_travel_speed_travel_mode[mode]<- world.get_linear_forecast(i.memory_all_modes, mode);
 		if inhabitant_expected_relative_travel_speed_travel_mode[mode] <= avg_my_last_5_days_travel_time{
 			inhabitant_potential_existence_need_satisfaction <-0.0;
@@ -675,13 +694,16 @@ action calculate_ratio_uncertainty_uncertainty_tolerance_level (string s){
 		else {
 			inhabitant_potential_existence_need_satisfaction <- inhabitant_expected_relative_travel_speed_travel_mode[mode]/mode_speed_int[mode];
 		}
+		
+		return inhabitant_potential_existence_need_satisfaction;
 	}
 	
-	action sub_potential_OVERALL_need_satisfaction(inhabitants i, int mode){
+	float sub_potential_OVERALL_need_satisfaction(inhabitants i, int mode){
 		float inhabitants_potential_overall_need_satisfaction <- 
 		(inhabitant_relative_importance_existence_need * inhabitant_potential_existence_need_satisfaction)
-		+(inhabitant_relative_importance_social_need * inhabitant_potential_social_need_satisfaction_travel);
-		//+(inhabitant_relative_importance_personal_need * inhabitant_potetial_personal_need_satisfaction);
+		+(inhabitant_relative_importance_social_need * inhabitant_potential_social_need_satisfaction_travel)
+		+(inhabitant_relative_importance_personal_need * inhabitant_potential_personal_need_satisfaction_travel);
+		return inhabitants_potential_overall_need_satisfaction;
 	}
 
 

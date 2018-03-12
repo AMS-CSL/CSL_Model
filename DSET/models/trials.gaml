@@ -12,6 +12,15 @@ global {
 	
 	
 	init { 
+		map<int,list<float>> mmm;
+		int ik <- 2;
+		list<int> inl ;
+		add 1 to: inl;
+		add 2 to: inl;
+		add 3 to:inl;
+		write "----" + inl;
+		mmm[ik] <-  [3,4];
+		write "this is mmm :" + mmm;
 		msi["bike"] <- 10;
 		add 10 to:ln at:length(ln);
 		msi["auto"] <- 50;
