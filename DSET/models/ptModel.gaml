@@ -140,7 +140,7 @@ species tram skills:[moving]{
 		} else
 		{
 			draw circle(150) color: # blue;
-			//draw obj_file("../includes/pt_related/small_tram.obj", 90::{-1,0,0}) at: location + {0,0,30.0} size: 130.0  rotate: heading;
+			draw obj_file("../includes/pt_related/small_tram.obj", 90::{-1,0,0}) at: location + {0,0,30.0} size: 130.0  rotate: heading;
 			//draw rectangle(150,20) color:#red    rotate: heading;
 			draw link(self.location, my_terminal.location) color: # black size: 50;
 			draw my_lijn color: # white size: 50;
@@ -170,7 +170,7 @@ species metro skills:[moving]{
 		} else
 		{
 			draw rectangle(250, 75) color: # red depth: 10 rotate: heading;
-			//draw obj_file("../includes/pt_related/turn_amsmetro_sweden.obj", 90::{-1,0,0})  at: location + {0,0,-30.0} size: 420.0  rotate: heading;
+			draw obj_file("../includes/pt_related/turn_amsmetro_sweden.obj", 90::{-1,0,0})  at: location + {0,0,-30.0} size: 420.0  rotate: heading;
 			//draw obj_file("../includes/pt_related/ams_metro.obj", 90::{-1,0,0})  at: location + {0,0,-30.0} size: 20.0 color: rgb(#blue,0.5) rotate: heading;
 			draw link(self.location, my_terminal.location) color: # red size: 50;
 		}
@@ -226,7 +226,7 @@ experiment ptModel type: gui {
 	float minimum_cycle_duration <-0.4;
 	
 	output {
-		display "2d" type:java2D background:between(list(current_date)[3], 12,20)?rgb(#black):rgb(#white){
+		display "2d" type:opengl background:between(list(current_date)[3], 12,20)?rgb(#black):rgb(#white){
 			
 			species metro aspect:a;
 			species metrolines aspect:a refresh:false ;

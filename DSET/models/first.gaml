@@ -653,15 +653,37 @@ action calculate_ratio_uncertainty_uncertainty_tolerance_level (string s){
 		}
 		
 		
-		return 10; //FIXME correct this return value 	
+		return (inquiry_per_mode.pairs with_max_of(each.value[3])).key; //FIXME correct this return value 	
 	 }
 	
 	
 	//------------------- OPTIMIZE ( parameter coming into this function  = self) 
 	// what does it do? = it collects all possible choices (used or unused) by the population, then check what is more suitable than current choice
 	
+	 int optimizes (inhabitants i){
+	 	int mode;
+		
+		list<int> peer_modes <- [1,2,3,4];// what are peers using;
+//FIXME does inhabitant evaluate also own mode here or only of the peers? 		
+		
+		if !empty(peer_modes){
+			loop ii over: peer_modes{
+			list<float> my_inquiry_each_mode_used ;
+			add sub_potential_PERSONAL_need_satisfaction(self, ii) to:my_inquiry_each_mode_used;
+			add sub_potential_EXISTENCE_need_satisfaction(self, ii) to:my_inquiry_each_mode_used;
+			add sub_potential_SOCIAL_need_satisfaction(self, ii) to:my_inquiry_each_mode_used;
+			add sub_potential_OVERALL_need_satisfaction(self, ii) to:my_inquiry_each_mode_used;
+			inquiry_per_mode[ii] <- my_inquiry_each_mode_used; // maps a mode to four sub-procedure results eg. 1::[1,2,3,4]
+		}
+		} else {
+			warn "Agent " + i +  "has no peers to optimize";
+		}
+		
+		
+		return (inquiry_per_mode.pairs with_max_of(each.value[3])).key; //FIXME correct this return value 	
+	 }
 	
-	//FIXME 	how can we get relative_speed_per_mode if an agent never travelled using a particular mode ? In this model this is replaced by avg_my_last_5_days_travel_time
+	
 	
 	
 	// SUB PROCEDURES

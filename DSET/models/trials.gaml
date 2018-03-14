@@ -19,6 +19,27 @@ global {
 		add 2 to: inl;
 		add 3 to:inl;
 		write "----" + inl;
+		
+		map<int, int> intmap <- [33::10,44::20];
+		write "--- >>" + (intmap.pairs with_max_of each.key).value;
+		
+		map<int, list<int>> a <- [1::[1,2,3,14], 2::[1,2,3,16]];
+		write a.values;
+		write a;
+		write "=======";
+		write a;
+		write a.keys;
+		//write a.values max_of(each);
+		write (a.pairs with_max_of(each.value[3])).key;
+		
+		write a.values[1] with_max_of(each);
+		
+		write (a.pairs with_max_of(last(each.value))).key;
+		write a.pairs;
+		
+		
+		
+		
 		mmm[ik] <-  [3,4];
 		write "this is mmm :" + mmm;
 		msi["bike"] <- 10;
