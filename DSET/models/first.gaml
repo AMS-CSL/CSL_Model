@@ -62,8 +62,9 @@ list<int> work_bike_min <- [19,23];
 	/** Insert the global definitions, variables and actions here */
 	list<string> modes <- ["bike", "walk", "pt", "car"];
 	map<string, int> mode_speed_string <- ["bike"::15, "walk"::4, "pt"::40, "car"::60];
-	map<string, int> mode_value <- ["bike"::1, "walk"::2, "pt"::3, "car"::4];
 	map<int, int> mode_speed_int <- [1::15, 2::4, 3::40, 4::60];
+	map<string, int> mode_value <- ["bike"::1, "walk"::2, "pt"::3, "car"::4];
+	
 	//	list<string> maps <- mode_speed.keys;
 	//geometry shape <- square(5 # km);
 	init
@@ -199,7 +200,7 @@ int cognitive_effort <- 5;
 	float inhabitant_existence_need_satisfaction     ;
 	float inhabitant_overall_need_satisfaction_aspiration_level_ratio;
 
-
+   
 	// uncertainty variables
 	
 	map<string, float> my_uncertainty;
@@ -208,7 +209,8 @@ int cognitive_effort <- 5;
  list<float> memory_bike_times ;
  list<float> memory_walk_times;
  list<float> memory_pt_times ;
- list<float> memory_auto_times ;
+ list<float> memory_car_times ;
+  map<int, list<float>> mode_specific_memory <- [1::memory_bike_times, 2::memory_walk_times, 3::memory_pt_times, 4::memory_car_times];
  list<float> memory_all_modes; // list of 5
  map<string,float> my_expected_travel_time_all_modes <- ["bike"::0.0,"walk"::0.0,"pt"::0.0, "car"::0.0];
  map<string,float> my_uncertainty_travel_time_all_modes <- ["bike"::0.0,"walk"::0.0,"pt"::0.0, "car"::0.0];
@@ -217,7 +219,8 @@ int cognitive_effort <- 5;
 
 
 reflex movement {
-	do goto target:my_office on:g speed:1.0;
+	float my_speed <- mode_speed_int[self.value_mode_actual] #km/#h;
+	do goto target:my_office on:g speed:my_speed;
 }
 
 	
@@ -511,8 +514,8 @@ action calculate_relative_overall_need_satisfaction {
   memory_bike_times <-list_with(cognitive_effort,distance_between(topology(world),[my_home, my_office])/rnd(mode_speed_string["bike"]+2,mode_speed_string["bike"]-2));
   memory_walk_times <-list_with(cognitive_effort, distance_between(topology(world),[my_home, my_office])/rnd(mode_speed_string["walk"]+1,mode_speed_string["walk"]-1));
   memory_pt_times <-list_with(cognitive_effort, distance_between(topology(world),[my_home, my_office])/rnd(mode_speed_string["pt"]+15,mode_speed_string["pt"]-15));
-  memory_auto_times <-list_with(cognitive_effort,distance_between(topology(world),[my_home, my_office])/rnd(mode_speed_string["car"]+10,mode_speed_string["car"]-10));
-  memory_all_modes <- memory_auto_times;
+  memory_car_times <-list_with(cognitive_effort,distance_between(topology(world),[my_home, my_office])/rnd(mode_speed_string["car"]+10,mode_speed_string["car"]-10));
+  memory_all_modes <- memory_car_times;
   write memory_all_modes;
 }
  
@@ -539,7 +542,7 @@ action calculate_relative_overall_need_satisfaction {
 
 		match 4
 		{
-			travel_time <- gauss(mean(i.memory_auto_times), standard_deviation(i.memory_auto_times));
+			travel_time <- gauss(mean(i.memory_car_times), standard_deviation(i.memory_car_times));
 		}
 	}
 	return travel_time;
@@ -552,7 +555,7 @@ map get_expected_travel_time_for_all_modes (inhabitants i)
 	expected_travel_time_all_modes["bike"] <- gauss(mean(i.memory_bike_times), standard_deviation(i.memory_bike_times));
 	expected_travel_time_all_modes["walk"] <- gauss(mean(i.memory_walk_times), standard_deviation(i.memory_walk_times));
 	expected_travel_time_all_modes["pt"] <- gauss(mean(i.memory_pt_times), standard_deviation(i.memory_pt_times));
-	expected_travel_time_all_modes["car"] <- gauss(mean(i.memory_auto_times), standard_deviation(i.memory_auto_times));
+	expected_travel_time_all_modes["car"] <- gauss(mean(i.memory_car_times), standard_deviation(i.memory_car_times));
 	return expected_travel_time_all_modes;
 }
 
@@ -769,7 +772,7 @@ init
 		{
 			//draw circle(50) color: rgb(# blue, 0.2) empty: true;
 //			draw circle(20) color: rgb(((modes index_of my_mode_actual) + 10) * 60, 100, 100);
-draw circle(50) color:#red;
+draw circle(mode_speed_int[self.value_mode_actual]*2) color:#red;
 			//draw string(int(self)) color: # white font: font('Helvetica Neue', 12, # bold + # italic);
 			ask my_peers
 			{
@@ -778,7 +781,7 @@ draw circle(50) color:#red;
 
 		} else
 		{
-			draw circle(50) color:#red;
+			draw circle(mode_speed_int[self.value_mode_actual]*2) color:#red;
 			//draw circle(20) color: rgb((modes index_of (my_mode_actual)) * 60, 0, 0);
 			//draw string(int(self)) color: # white font: font('Helvetica Neue', 12, # bold);
 		}
