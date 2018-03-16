@@ -15,7 +15,7 @@ global
 	
 	
 	
-date starting_date <- date("2008-02-22 00:00:00");
+date starting_date <- date("2018-02-22 00:00:00");
 float step <-1 #mn;
 
 
@@ -65,8 +65,7 @@ list<int> work_bike_min <- [19,23];
 	map<int, int> mode_speed_int <- [1::15, 2::4, 3::40, 4::60];
 	map<string, int> mode_value <- ["bike"::1, "walk"::2, "pt"::3, "car"::4];
 	
-	//	list<string> maps <- mode_speed.keys;
-	//geometry shape <- square(5 # km);
+	
 	init
 	{
 		create study_area from: shape_file_bounds;
@@ -89,14 +88,8 @@ list<int> work_bike_min <- [19,23];
 
 		create inhabitants number: inhabitant_population;
 		
-		string aaa <- "bike";
-		//write mode_value[aaa];
-		//write mode_value where (each > 1);
-		list<int> ia <- [1, 2];
-		list<int> ib <- [1, 2];
-		//write list(matrix(ia) + matrix(ib));
-		map<buildings, int> bm <- [buildings[1]::4, buildings[8]::2, buildings[3]::3];
-		//write bm.keys where (bm[each] > 2);
+		
+	
 		
 		
 		 g <- as_edge_graph(shape_file_streets);
@@ -164,6 +157,7 @@ species inhabitants schedules: shuffle(inhabitants) skills:[moving]
 float ambition_level <- rnd(1.0);
 float uncertainty_tolerance_level <- rnd(1.0);
 int cognitive_effort <- 5;
+float my_aspiration <- rnd(1.0);
 
 	
 // TRAVEL ATTRIBUTES
@@ -177,17 +171,20 @@ int cognitive_effort <- 5;
 //FIXME  these two below need to change to network characteristics, when we have a clean network
 	float my_travel_distance <- rnd(1.0,10.0);
 	float my_travel_time <- my_travel_distance / mode_speed_string[my_mode_actual];
-	float my_aspiration <- rnd(1.0);
+	
+	
+	
 	
 	list<inhabitants> my_peers;
+	bool has_peers <- false;
 	
 	//buildings home;
 	
 	buildings my_home <- one_of(buildings where (each.use = "residential"));
-	// check location below  if any error, this could be a possible error in rare cases
 	point location <- my_home.location;
 	buildings my_office <- one_of(buildings where (each.use = "office"));
-	bool has_peers <- false;
+	
+	
 	
 	
 
@@ -206,14 +203,16 @@ int cognitive_effort <- 5;
 	map<string, float> my_uncertainty;
 	float inhabitant_uncertainty_ratio;
 
- list<float> memory_bike_times ;
- list<float> memory_walk_times;
- list<float> memory_pt_times ;
- list<float> memory_car_times ;
-  map<int, list<float>> mode_specific_memory <- [1::memory_bike_times, 2::memory_walk_times, 3::memory_pt_times, 4::memory_car_times];
- list<float> memory_all_modes; // list of 5
- map<string,float> my_expected_travel_time_all_modes <- ["bike"::0.0,"walk"::0.0,"pt"::0.0, "car"::0.0];
- map<string,float> my_uncertainty_travel_time_all_modes <- ["bike"::0.0,"walk"::0.0,"pt"::0.0, "car"::0.0];
+
+	// COGNITIVE MEMORY
+	 list<float> memory_bike_times ;
+	 list<float> memory_walk_times;
+	 list<float> memory_pt_times ;
+	 list<float> memory_car_times ;
+	 map<int, list<float>> mode_specific_memory <- [1::memory_bike_times, 2::memory_walk_times, 3::memory_pt_times, 4::memory_car_times];
+	 list<float> memory_all_modes; // list of 5
+	 map<string,float> my_expected_travel_time_all_modes <- ["bike"::0.0,"walk"::0.0,"pt"::0.0, "car"::0.0];
+	 map<string,float> my_uncertainty_travel_time_all_modes <- ["bike"::0.0,"walk"::0.0,"pt"::0.0, "car"::0.0];
 
 
 
@@ -228,9 +227,7 @@ reflex movement {
 	
 	
 	
-	reflex get_inhabitant_behavior{
-		//my_behavior <- get_behavior(self);
-	}
+
 	
 	
 
