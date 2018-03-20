@@ -15,7 +15,7 @@ global
 	
 	
 	
-date starting_date <- date("2018-02-22 00:00:00");
+date starting_date <- date("2018-03-20 00:00:01");
 float step <-1 #mn;
 
 
@@ -217,11 +217,9 @@ float my_aspiration <- rnd(1.0);
 
 
 
-reflex movement {
-	float my_speed <- mode_speed_int[self.value_mode_actual] #km/#h;
-	do goto target:my_office on:g speed:my_speed;
-}
-
+	// TIME VARIABLES
+	list<int> my_morning_depart_time ;
+	list<int> my_evening_depart_time ;
 	
 	
 	
@@ -414,14 +412,14 @@ reflex movement {
 
 
 
-	action calculate_social_need_satisfaction
+	float calculate_social_need_satisfaction (inhabitants i)
 	{
 		float similarity_value;
-		similarity_value<- calculate_similarity(my_peers);
+		similarity_value<- calculate_similarity(i.my_peers);
 		float superiority_value;
-		superiority_value <- calculate_superiority(my_peers);
-		my_need_social <- (similarity_value + superiority_value)/2;
-		//write my_need_social;
+		superiority_value <- calculate_superiority(i.my_peers);
+		//my_need_social <- (similarity_value + superiority_value)/2;
+		return (similarity_value + superiority_value)/2;
 	}
 	
 	
@@ -430,10 +428,10 @@ reflex movement {
 	
 //------------------------------------------------------------3. PERSONAL NEEDS ----------------------------------------------------------
 //FIXME i have set max mode difference to 3, because modes range from [1-4]
-	float calculate_personal_need_satisfaction
+	float calculate_personal_need_satisfaction(inhabitants i)
 	{
 
-		float relative_diff_to_current_peers_travel_mode <-value_mode_preferred - value_mode_actual = 0?0.0:(abs(value_mode_preferred-value_mode_actual)/3.0);
+		float relative_diff_to_current_peers_travel_mode <-i.value_mode_preferred - i.value_mode_actual = 0?0.0:(abs(i.value_mode_preferred-i.value_mode_actual)/3.0);
 		my_need_personal <- relative_diff_to_current_peers_travel_mode;
 		return relative_diff_to_current_peers_travel_mode;
 		}
@@ -738,8 +736,20 @@ action calculate_ratio_uncertainty_uncertainty_tolerance_level (string s){
 
  
 
+list<int> get_morning_departure_time{
+	
+	int morning_hour <-int(gauss(8,1));
+	int morning_minute <- int(rnd(0,60));
+	return [morning_hour, morning_minute];
+}
 
 
+list<int> get_evening_departure_time{
+	
+	int evening_hour <-int(gauss(17,1));
+	int evening_minute <- int(rnd(0,60));
+	return [evening_hour, evening_minute];
+}
 
 
 
@@ -747,17 +757,64 @@ action calculate_ratio_uncertainty_uncertainty_tolerance_level (string s){
 init
 	{
 	//do select_peers;
-		do get_peers(list(inhabitants), distance_between_homes, relative_work_work_distance);
+		
 		do assign_initial_cognitive_memory;
-		write self.memory_all_modes;
-		do calculate_social_need_satisfaction ;
-		my_need_personal <- calculate_personal_need_satisfaction();
-		write self.memory_all_modes;
+		
+	}
+
+
+
+
+
+
+	reflex every_day when:every(#day){
+	
+	
+	if current_date.day_of_week <6{
+		my_morning_depart_time <- get_morning_departure_time();
+		my_evening_depart_time <- get_evening_departure_time();
+		
+	}
+	
+	else {
+		// this is weekend behavior;
+	}
+	
+	
+	
+	
+		do get_peers(list(inhabitants), distance_between_homes, relative_work_work_distance);
+		
+		
+		my_need_social <- calculate_social_need_satisfaction(self) ;
+		my_need_personal <- calculate_personal_need_satisfaction(self);
+		
 		do calculate_existence_need_satisfaction(self);
 		//my_overall_needs_satisfaction <- 1.0;
 		write world.get_behavior(overall_need_satisfaction_aspiration_level_ratio,uncertainty_tolerance_level_ratio);
 	}
 
+
+reflex every_morning when:current_date.hour = my_morning_depart_time[0] and current_date.minute = my_morning_depart_time[1] and !(my_office covers location) and current_date.day_of_week <6
+	{
+		do morning_movement;
+	}
+	
+	
+	reflex every_evening when:current_date.hour = my_evening_depart_time[0] and current_date.minute = my_evening_depart_time[1] and !(my_home covers location) and current_date.day_of_week <6
+	{
+		do evening_movement;
+	}
+	
+	action morning_movement {
+	float my_speed <- mode_speed_int[self.value_mode_actual] #km/#h;
+	do goto target:my_office on:g speed:my_speed;
+}
+
+action evening_movement {
+	float my_speed <- mode_speed_int[self.value_mode_actual] #km/#h;
+	do goto target:my_home on:g speed:my_speed;
+}
 
 
 
@@ -779,6 +836,7 @@ draw circle(mode_speed_int[self.value_mode_actual]*2) color:#red;
 		} else
 		{
 			draw circle(mode_speed_int[self.value_mode_actual]*2) color:#red;
+			draw string(my_mode_actual) + "smething strange" rotate:145::{0,0,1} color:#red;
 			//draw circle(20) color: rgb((modes index_of (my_mode_actual)) * 60, 0, 0);
 			//draw string(int(self)) color: # white font: font('Helvetica Neue', 12, # bold);
 		}
@@ -805,7 +863,7 @@ experiment "Main Model" type: gui
 	/** Insert here the definition of the input and output of the model */
 	output
 	{
-		display d type: opengl
+		display d type: java2D
 		{
 			species study_area aspect: a;
 			species buildings aspect: a refresh:false;

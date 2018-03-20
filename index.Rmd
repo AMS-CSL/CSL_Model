@@ -4,6 +4,7 @@ author: "Srirama"
 date: "March 14, 2018"
 output: bookdown::gitbook
 site: bookdown::bookdown_site
+cover-image: "DATA/gif/cover.png"
 ---
 
 ```{r setup, include=FALSE}

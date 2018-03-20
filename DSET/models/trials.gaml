@@ -4,14 +4,15 @@ model obj_drawing
 global {
 	string s <- "1|2|3";
 	float step<-1#h;
-	date start_date <- date( [2018,2,20,0,0,0]);
+	date start_date <- date( [2018,3,21,0,0,0]);
 	list<int> ln <- [1,1,2,2,2,3,55] update:ln;
 	list<string> lss <- ['1','1','2','2','a'];
 	map<string, int> msi;
 	int i <- 1 among:ln parameter:true;
-	
+	date starting_date <- date("2018-03-21 14:10:01");
 	
 	init { 
+		write "today is " + starting_date.day_of_week;
 		map<int,list<float>> mmm;
 		int ik <- 2;
 		list<int> inl ;
@@ -40,6 +41,13 @@ global {
 		
 		
 		
+		if current_date.hour = 14{
+			write "midnight" ;
+		} else {
+			write current_date plus_minutes 10;
+		}
+		
+		//write rnd(date("2018-02-22 14:10:01"),date("2018-02-22 14:10:01"));
 		mmm[ik] <-  [3,4];
 		write "this is mmm :" + mmm;
 		msi["bike"] <- 10;
