@@ -13,7 +13,7 @@ global {
 	
 	
 	
-	string get_behavior(float satisfaction_factor, float uncertainty_factor){
+	string choose_behavior(float satisfaction_factor, float uncertainty_factor){
 		
 //TODO set color in the main model		
 		if (satisfaction_factor > 0.5) and (uncertainty_factor <= 0.5){
@@ -28,14 +28,7 @@ global {
 	}
 	
 	
-	action do_a_behavior (string this_behavior){
-		
-		switch this_behavior{
-			match "repeat"{
-				
-			}
-		}
-	}
+	
 	
 }
 

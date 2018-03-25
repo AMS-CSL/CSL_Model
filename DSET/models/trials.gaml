@@ -13,6 +13,7 @@ global {
 	
 	init { 
 		write "today is " + starting_date.day_of_week;
+		//write 
 		map<int,list<float>> mmm;
 		int ik <- 2;
 		list<int> inl ;

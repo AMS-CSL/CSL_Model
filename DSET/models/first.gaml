@@ -6,7 +6,7 @@
 * draw string("Off_" + int(self)) color: # white font: font('Helvetica Neue', 12, # bold + # italic);
 */
 model model1
-import "dset_functions_library.gaml"
+//import "dset_functions_library.gaml"
 import "behavior.gaml"
 //import "ptModel.gaml"
 
@@ -61,8 +61,8 @@ list<int> work_bike_min <- [19,23];
 
 	/** Insert the global definitions, variables and actions here */
 	list<string> modes <- ["bike", "walk", "pt", "car"];
-	map<string, int> mode_speed_string <- ["bike"::15, "walk"::4, "pt"::40, "car"::60];
-	map<int, int> mode_speed_int <- [1::15, 2::4, 3::40, 4::60];
+	map<string, float> mode_speed_string <- ["bike"::4.1, "walk"::1.1, "pt"::8.3, "car"::16.6]; //speeds in m/s
+	map<int, float> mode_speed_int <- [1::4.1, 2::1.1, 3::8.3, 4::16.6];
 	map<string, int> mode_value <- ["bike"::1, "walk"::2, "pt"::3, "car"::4];
 	
 	
@@ -209,7 +209,7 @@ float my_aspiration <- rnd(1.0);
 	 list<float> memory_walk_times;
 	 list<float> memory_pt_times ;
 	 list<float> memory_car_times ;
-	 map<int, list<float>> mode_specific_memory <- [1::memory_bike_times, 2::memory_walk_times, 3::memory_pt_times, 4::memory_car_times];
+	 map<int, list<float>> mode_specific_memory ;//<- [1::memory_bike_times, 2::memory_walk_times, 3::memory_pt_times, 4::memory_car_times];
 	 list<float> memory_all_modes; // list of 5
 	 map<string,float> my_expected_travel_time_all_modes <- ["bike"::0.0,"walk"::0.0,"pt"::0.0, "car"::0.0];
 	 map<string,float> my_uncertainty_travel_time_all_modes <- ["bike"::0.0,"walk"::0.0,"pt"::0.0, "car"::0.0];
@@ -218,8 +218,11 @@ float my_aspiration <- rnd(1.0);
 
 
 	// TIME VARIABLES
-	list<int> my_morning_depart_time ;
-	list<int> my_evening_depart_time ;
+	list<int> my_morning_home_depart_time ;
+	date my_morning_office_arrive_time;
+	date my_evening_home_arrive_time;
+	
+	list<int> my_evening_office_depart_time ;
 	
 	
 	
@@ -439,25 +442,29 @@ float my_aspiration <- rnd(1.0);
 
 
 
-//FIXME you have to add last day travel experience to your all_mode memory;
+
+//FIXME i am bit skeptical on this code  flow for existence flow
 //------------------------------------------------------------4. EXISTENCE  NEEDS ----------------------------------------------------------
 // This is based on speed calculations, if I travel faster than average travel time in last 5 days, i am satisfied in existence need.
 		float avg_my_last_5_days_travel_time ;
 		float my_last_day_travel_time;
+		float avg_my_last_5_days_travel_time_mode_spefiic;
 
-
-	action calculate_existence_need_satisfaction (inhabitants i)
+	float calculate_existence_need_satisfaction (inhabitants i)
 	{
-		write "inside existence \t"+ i.memory_all_modes;
-		 avg_my_last_5_days_travel_time <- mean(i.memory_all_modes);
-		 my_last_day_travel_time <- i.memory_all_modes[cognitive_effort-1];
-		if my_last_day_travel_time <= avg_my_last_5_days_travel_time{
+		//write "inside existence \t"+ i.memory_all_modes;
+		 avg_my_last_5_days_travel_time_mode_spefiic <- mean(i.mode_specific_memory[i.value_mode_actual]);
+		 // get last value in the list of mode specific travel time list 
+		 my_last_day_travel_time <- i.mode_specific_memory[i.value_mode_actual][cognitive_effort-1];
+		if my_last_day_travel_time <= avg_my_last_5_days_travel_time_mode_spefiic{
 			inhabitant_existence_need_satisfaction    <- 0.0;
 		} 
 				else {
-			inhabitant_existence_need_satisfaction     <- float(int(my_last_day_travel_time/avg_my_last_5_days_travel_time)); 
+			inhabitant_existence_need_satisfaction     <- float(int(my_last_day_travel_time/avg_my_last_5_days_travel_time_mode_spefiic)); 
 			//FIXME for now this is almost always 1, need to fix. 
 		}
+		
+		return inhabitant_existence_need_satisfaction;
 	}
 
 
@@ -470,10 +477,12 @@ float my_aspiration <- rnd(1.0);
 //----------------------------------------------------------------------------------------------------------------------------------------------------------------------------//
 
 
-action calculate_overall_need_satisfaction {
-	my_overall_needs_satisfaction <- (inhabitant_relative_importance_existence_need * inhabitant_existence_need_satisfaction)+
+float calculate_overall_need_satisfaction {
+	float a <- (inhabitant_relative_importance_existence_need * inhabitant_existence_need_satisfaction)+
 									 (inhabitant_relative_importance_personal_need * my_need_personal)+
 									 (inhabitant_relative_importance_social_need * my_need_social);
+									 
+									 return a;
 }
 
 action calculate_relative_overall_need_satisfaction {
@@ -510,8 +519,10 @@ action calculate_relative_overall_need_satisfaction {
   memory_walk_times <-list_with(cognitive_effort, distance_between(topology(world),[my_home, my_office])/rnd(mode_speed_string["walk"]+1,mode_speed_string["walk"]-1));
   memory_pt_times <-list_with(cognitive_effort, distance_between(topology(world),[my_home, my_office])/rnd(mode_speed_string["pt"]+15,mode_speed_string["pt"]-15));
   memory_car_times <-list_with(cognitive_effort,distance_between(topology(world),[my_home, my_office])/rnd(mode_speed_string["car"]+10,mode_speed_string["car"]-10));
-  memory_all_modes <- memory_car_times;
-  write memory_all_modes;
+  
+  
+  mode_specific_memory <- [1::memory_bike_times, 2::memory_walk_times, 3::memory_pt_times, 4::memory_car_times];
+  write mode_specific_memory;
 }
  
  // function to get travel time for a given mode = expected travel time for next trip as per the model
@@ -612,6 +623,7 @@ action calculate_ratio_uncertainty_uncertainty_tolerance_level (string s){
 	//------------------- IMITATE (parameter coming into this function = self)
 	// what does it do? = adopts the mode that is most used by peers
 	int imitates (inhabitants i){
+		write "imitates inhabitant" + i;
 		int mode;
 		// what are peers doing;
 		list<int> peer_modes <- i.my_peers collect (each.value_mode_actual);
@@ -625,6 +637,7 @@ action calculate_ratio_uncertainty_uncertainty_tolerance_level (string s){
 	//-------------------  REPEAT  ( parameter coming into this function  = self)
 	// what does it do ? = just continues with the mode from previous step 
 	int repeats (inhabitants i){
+		write "repeats inhabitant" + i;
 		int mode <- i.value_mode_actual;
 		return mode;
 	}
@@ -633,7 +646,7 @@ action calculate_ratio_uncertainty_uncertainty_tolerance_level (string s){
 	// what does it do? it first lists all the modes being used by the population, then checks what is more suitable than current choice
 	 int inquires (inhabitants i){
 	 	int mode;
-		
+		write "inquiring inhabitant" + i;
 		list<int> peer_modes <- (remove_duplicates(i.my_peers collect (each.value_mode_actual)))-i.my_mode_actual;// what are peers using;
 //FIXME does inhabitant evaluate also own mode here or only of the peers? 		
 		
@@ -660,17 +673,17 @@ action calculate_ratio_uncertainty_uncertainty_tolerance_level (string s){
 	
 	 int optimizes (inhabitants i){
 	 	int mode;
-		
+		write "optimizes inhabitant" + i;
 		list<int> peer_modes <- [1,2,3,4];// what are peers using;
 //FIXME does inhabitant evaluate also own mode here or only of the peers? 		
 		
 		if !empty(peer_modes){
 			loop ii over: peer_modes{
-			list<float> my_inquiry_each_mode_used ;
-			add sub_potential_PERSONAL_need_satisfaction(self, ii) to:my_inquiry_each_mode_used;
-			add sub_potential_EXISTENCE_need_satisfaction(self, ii) to:my_inquiry_each_mode_used;
-			add sub_potential_SOCIAL_need_satisfaction(self, ii) to:my_inquiry_each_mode_used;
-			add sub_potential_OVERALL_need_satisfaction(self, ii) to:my_inquiry_each_mode_used;
+			list<float> my_inquiry_each_mode_used <-[] ;
+			add sub_potential_PERSONAL_need_satisfaction(i, ii) to:my_inquiry_each_mode_used;
+			add sub_potential_EXISTENCE_need_satisfaction(i, ii) to:my_inquiry_each_mode_used;
+			add sub_potential_SOCIAL_need_satisfaction(i, ii) to:my_inquiry_each_mode_used;
+			add sub_potential_OVERALL_need_satisfaction(i, ii) to:my_inquiry_each_mode_used;
 			inquiry_per_mode[ii] <- my_inquiry_each_mode_used; // maps a mode to four sub-procedure results eg. 1::[1,2,3,4]
 		}
 		} else {
@@ -680,9 +693,6 @@ action calculate_ratio_uncertainty_uncertainty_tolerance_level (string s){
 		
 		return (inquiry_per_mode.pairs with_max_of(each.value[3])).key; //FIXME correct this return value 	
 	 }
-	
-	
-	
 	
 	// SUB PROCEDURES
 	// input to this function is agent and mode number
@@ -712,9 +722,10 @@ action calculate_ratio_uncertainty_uncertainty_tolerance_level (string s){
 	}
 	
 	
-	
+
 	float sub_potential_EXISTENCE_need_satisfaction(inhabitants i, int mode){
-		inhabitant_expected_relative_travel_speed_travel_mode[mode]<- world.get_linear_forecast(i.memory_all_modes, mode);
+		inhabitant_expected_relative_travel_speed_travel_mode[mode]<- get_linear_forecast(i.mode_specific_memory[mode], mode);
+		write "prediction --->" + inhabitant_expected_relative_travel_speed_travel_mode[mode];
 		if inhabitant_expected_relative_travel_speed_travel_mode[mode] <= avg_my_last_5_days_travel_time{
 			inhabitant_potential_existence_need_satisfaction <-0.0;
 		}
@@ -733,23 +744,40 @@ action calculate_ratio_uncertainty_uncertainty_tolerance_level (string s){
 		return inhabitants_potential_overall_need_satisfaction;
 	}
 
-
+float get_linear_forecast(list<float> f, int mode_number){
+		matrix<float> data_matrix <- 0.0 as_matrix {2,length(f)};
+		loop i from: 0 to: length(f) -1 {
+			
+			data_matrix[1,i] <- i;
+			
+			data_matrix[0,i] <- f[i];
+		}
+		//write data_matrix;
+		if mode_number = ""{
+			warn "No mode defined in call to linear forecast";
+		}
+		regression my_regression_model  <- build(data_matrix);
+		//write my_regression_model;
+		float my_prediction <-  predict(my_regression_model, [length(f)]);
+		write "i am inhabitant"+ int(self)+ " using mode " + string(mode_number) + "_ " + my_prediction;
+		return my_prediction;
+	}
  
 
-list<int> get_morning_departure_time{
+	list<int> get_morning_departure_time{
 	
 	int morning_hour <-int(gauss(8,1));
 	int morning_minute <- int(rnd(0,60));
 	return [morning_hour, morning_minute];
-}
+	}
 
 
-list<int> get_evening_departure_time{
+	list<int> get_evening_departure_time{
 	
 	int evening_hour <-int(gauss(17,1));
 	int evening_minute <- int(rnd(0,60));
 	return [evening_hour, evening_minute];
-}
+	}
 
 
 
@@ -763,45 +791,75 @@ init
 	}
 
 
-
+	action execute_a_behavior (string this_behavior){
+		
+		switch this_behavior{
+			match "repeat"{
+				value_mode_actual<- repeats(self);
+			}
+			
+			
+			match "imitate"{
+				value_mode_actual <- imitates(self);
+			}
+			
+			match "inquire"{
+				value_mode_actual <- inquires(self);
+			}
+			
+			match "optimize"{
+				value_mode_actual <- optimizes(self);
+			}
+		}
+	}
 
 
 
 	reflex every_day when:every(#day){
 	
 	
-	if current_date.day_of_week <6{
-		my_morning_depart_time <- get_morning_departure_time();
-		my_evening_depart_time <- get_evening_departure_time();
+	
+	if current_date.day_of_week <6{ 
+		// inside if is weekday behavior
+		my_morning_home_depart_time <- get_morning_departure_time();
+		my_evening_office_depart_time <- get_evening_departure_time();
 		
 	}
 	
 	else {
-		// this is weekend behavior;
+		// inside else  is weekend behavior;
 	}
 	
 	
 	
-	
+		//GET PEERS
 		do get_peers(list(inhabitants), distance_between_homes, relative_work_work_distance);
 		
-		
+		//NEED CALCULATIONS
 		my_need_social <- calculate_social_need_satisfaction(self) ;
 		my_need_personal <- calculate_personal_need_satisfaction(self);
+		my_need_existence <- calculate_existence_need_satisfaction(self);
+		my_overall_needs_satisfaction <- calculate_overall_need_satisfaction();
 		
-		do calculate_existence_need_satisfaction(self);
-		//my_overall_needs_satisfaction <- 1.0;
-		write world.get_behavior(overall_need_satisfaction_aspiration_level_ratio,uncertainty_tolerance_level_ratio);
+		//UNCERTAINTY
+		
+		
+		// BEHAVIOR
+		string behavior <- world.choose_behavior(overall_need_satisfaction_aspiration_level_ratio,uncertainty_tolerance_level_ratio);
+		do execute_a_behavior(behavior);
+		
+		
+		
 	}
 
 
-reflex every_morning when:current_date.hour = my_morning_depart_time[0] and current_date.minute = my_morning_depart_time[1] and !(my_office covers location) and current_date.day_of_week <6
+	reflex every_morning when:current_date.hour = my_morning_home_depart_time[0] and current_date.minute = my_morning_home_depart_time[1] and !(my_office covers location) and current_date.day_of_week <6
 	{
 		do morning_movement;
 	}
 	
 	
-	reflex every_evening when:current_date.hour = my_evening_depart_time[0] and current_date.minute = my_evening_depart_time[1] and !(my_home covers location) and current_date.day_of_week <6
+	reflex every_evening when:current_date.hour = my_evening_office_depart_time[0] and current_date.minute = my_evening_office_depart_time[1] and !(my_home covers location) and current_date.day_of_week <6
 	{
 		do evening_movement;
 	}
@@ -809,12 +867,12 @@ reflex every_morning when:current_date.hour = my_morning_depart_time[0] and curr
 	action morning_movement {
 	float my_speed <- mode_speed_int[self.value_mode_actual] #km/#h;
 	do goto target:my_office on:g speed:my_speed;
-}
+	}
 
-action evening_movement {
+	action evening_movement {
 	float my_speed <- mode_speed_int[self.value_mode_actual] #km/#h;
 	do goto target:my_home on:g speed:my_speed;
-}
+	}
 
 
 
@@ -826,7 +884,7 @@ action evening_movement {
 		{
 			//draw circle(50) color: rgb(# blue, 0.2) empty: true;
 //			draw circle(20) color: rgb(((modes index_of my_mode_actual) + 10) * 60, 100, 100);
-draw circle(mode_speed_int[self.value_mode_actual]*2) color:#red;
+	draw circle(mode_speed_int[self.value_mode_actual]*2) color:#red;
 			//draw string(int(self)) color: # white font: font('Helvetica Neue', 12, # bold + # italic);
 			ask my_peers
 			{
@@ -835,8 +893,8 @@ draw circle(mode_speed_int[self.value_mode_actual]*2) color:#red;
 
 		} else
 		{
-			draw circle(mode_speed_int[self.value_mode_actual]*2) color:#red;
-			draw string(my_mode_actual) + "smething strange" rotate:145::{0,0,1} color:#red;
+			draw circle(mode_speed_int[self.value_mode_actual]*2) color:#cyan;
+			
 			//draw circle(20) color: rgb((modes index_of (my_mode_actual)) * 60, 0, 0);
 			//draw string(int(self)) color: # white font: font('Helvetica Neue', 12, # bold);
 		}
