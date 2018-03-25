@@ -522,48 +522,12 @@ action calculate_relative_overall_need_satisfaction {
   
   
   mode_specific_memory <- [1::memory_bike_times, 2::memory_walk_times, 3::memory_pt_times, 4::memory_car_times];
-  write mode_specific_memory;
+  //write mode_specific_memory;
 }
  
- // function to get travel time for a given mode = expected travel time for next trip as per the model
- float get_expected_travel_time_for_a_mode (inhabitants i, int mode)
-{
-	float travel_time;
-	switch mode
-	{
-		match 1
-		{
-			travel_time <- gauss(mean(i.memory_bike_times), standard_deviation(i.memory_bike_times));
-		}
 
-		match 2
-		{
-			travel_time <- gauss(mean(i.memory_walk_times), standard_deviation(i.memory_walk_times));
-		}
 
-		match 3
-		{
-			travel_time <- gauss(mean(i.memory_pt_times), standard_deviation(i.memory_pt_times));
-		}
 
-		match 4
-		{
-			travel_time <- gauss(mean(i.memory_car_times), standard_deviation(i.memory_car_times));
-		}
-	}
-	return travel_time;
-}
-
-//function to get expected time for all modes, argument = self
-map get_expected_travel_time_for_all_modes (inhabitants i)
-{
-	map<string, float> expected_travel_time_all_modes;
-	expected_travel_time_all_modes["bike"] <- gauss(mean(i.memory_bike_times), standard_deviation(i.memory_bike_times));
-	expected_travel_time_all_modes["walk"] <- gauss(mean(i.memory_walk_times), standard_deviation(i.memory_walk_times));
-	expected_travel_time_all_modes["pt"] <- gauss(mean(i.memory_pt_times), standard_deviation(i.memory_pt_times));
-	expected_travel_time_all_modes["car"] <- gauss(mean(i.memory_car_times), standard_deviation(i.memory_car_times));
-	return expected_travel_time_all_modes;
-}
 
 //function to get uncertainty factor for travel times for all modes, argument = self
 map get_uncertainty_travel_time_for_all_modes (inhabitants i){
@@ -679,13 +643,18 @@ action calculate_ratio_uncertainty_uncertainty_tolerance_level (string s){
 		
 		if !empty(peer_modes){
 			loop ii over: peer_modes{
-			list<float> my_inquiry_each_mode_used <-[] ;
+			list<float> my_inquiry_each_mode_used  ;// <-[];
 			add sub_potential_PERSONAL_need_satisfaction(i, ii) to:my_inquiry_each_mode_used;
+			write my_inquiry_each_mode_used;
 			add sub_potential_EXISTENCE_need_satisfaction(i, ii) to:my_inquiry_each_mode_used;
+			write my_inquiry_each_mode_used;
 			add sub_potential_SOCIAL_need_satisfaction(i, ii) to:my_inquiry_each_mode_used;
+			write my_inquiry_each_mode_used;
 			add sub_potential_OVERALL_need_satisfaction(i, ii) to:my_inquiry_each_mode_used;
+			write my_inquiry_each_mode_used;
 			inquiry_per_mode[ii] <- my_inquiry_each_mode_used; // maps a mode to four sub-procedure results eg. 1::[1,2,3,4]
-		}
+			
+		}write inquiry_per_mode;
 		} else {
 			warn "Agent " + i +  "has no peers to optimize";
 		}
@@ -696,13 +665,14 @@ action calculate_ratio_uncertainty_uncertainty_tolerance_level (string s){
 	
 	// SUB PROCEDURES
 	// input to this function is agent and mode number
-	list<float> inhabitant_expected_relative_travel_speed_travel_mode;//will contain values for modes 1,2,3,4
+	list<float> inhabitant_expected_relative_travel_speed_travel_mode<-[0,0,0,0.0];//will contain values for modes 1,2,3,4
 	float inhabitant_potential_existence_need_satisfaction;
 	float inhabitant_potential_social_need_satisfaction_travel;
 	float inhabitant_potential_personal_need_satisfaction_travel;
 	
 
 	float sub_potential_PERSONAL_need_satisfaction (inhabitants i, int mode){
+		write "i entered personal need " + i +" with mode "+mode;
 		float potential_personal_need_statisfaction;
 		if (abs(mode - i.value_mode_preferred) = 0){
 			 potential_personal_need_statisfaction <- 0.0;
@@ -716,6 +686,7 @@ action calculate_ratio_uncertainty_uncertainty_tolerance_level (string s){
 	
 	
 	float sub_potential_SOCIAL_need_satisfaction (inhabitants i, int mode){
+		write "i entered social need  " + i +" with mode "+mode;
 		float potential_similarity_with_travel_mode <- length(i.my_peers where (each.value_mode_actual = mode))/ length(i.my_peers);
 		inhabitant_potential_social_need_satisfaction_travel <- (potential_similarity_with_travel_mode + i.superior_to_peers_ratio)/2.0;
 		return inhabitant_potential_social_need_satisfaction_travel;
@@ -724,19 +695,22 @@ action calculate_ratio_uncertainty_uncertainty_tolerance_level (string s){
 	
 
 	float sub_potential_EXISTENCE_need_satisfaction(inhabitants i, int mode){
-		inhabitant_expected_relative_travel_speed_travel_mode[mode]<- get_linear_forecast(i.mode_specific_memory[mode], mode);
-		write "prediction --->" + inhabitant_expected_relative_travel_speed_travel_mode[mode];
-		if inhabitant_expected_relative_travel_speed_travel_mode[mode] <= avg_my_last_5_days_travel_time{
+		//inhabitant_expected_relative_travel_speed_travel_mode[mode]<- get_linear_forecast(i.mode_specific_memory[mode], mode);
+		write "i entered sub existence need " + i +" with mode "+mode;
+		inhabitant_expected_relative_travel_speed_travel_mode[mode-1]<- get_new_expected_value(i.mode_specific_memory[mode], mode);
+		write "prediction --->" + inhabitant_expected_relative_travel_speed_travel_mode[mode-1];
+		if inhabitant_expected_relative_travel_speed_travel_mode[mode-1] <= avg_my_last_5_days_travel_time{
 			inhabitant_potential_existence_need_satisfaction <-0.0;
 		}
 		else {
-			inhabitant_potential_existence_need_satisfaction <- inhabitant_expected_relative_travel_speed_travel_mode[mode]/mode_speed_int[mode];
+			inhabitant_potential_existence_need_satisfaction <- inhabitant_expected_relative_travel_speed_travel_mode[mode-1]/mode_speed_int[mode];
 		}
 		
 		return inhabitant_potential_existence_need_satisfaction;
 	}
 	
 	float sub_potential_OVERALL_need_satisfaction(inhabitants i, int mode){
+		write "i entered overall need " + i + " with mode "+mode;
 		float inhabitants_potential_overall_need_satisfaction <- 
 		(inhabitant_relative_importance_existence_need * inhabitant_potential_existence_need_satisfaction)
 		+(inhabitant_relative_importance_social_need * inhabitant_potential_social_need_satisfaction_travel)
@@ -744,7 +718,8 @@ action calculate_ratio_uncertainty_uncertainty_tolerance_level (string s){
 		return inhabitants_potential_overall_need_satisfaction;
 	}
 
-float get_linear_forecast(list<float> f, int mode_number){
+	float get_linear_forecast(list<float> f, int mode_number){
+		
 		matrix<float> data_matrix <- 0.0 as_matrix {2,length(f)};
 		loop i from: 0 to: length(f) -1 {
 			
@@ -761,6 +736,16 @@ float get_linear_forecast(list<float> f, int mode_number){
 		float my_prediction <-  predict(my_regression_model, [length(f)]);
 		write "i am inhabitant"+ int(self)+ " using mode " + string(mode_number) + "_ " + my_prediction;
 		return my_prediction;
+	}
+	
+	
+	
+	float get_new_expected_value(list<float> f, int mode_number){
+		float my_pred;
+		my_pred <- gauss(mean(f), standard_deviation(f));
+		write "inside function to get expected value " + my_pred;
+		
+		return my_pred;
 	}
  
 
@@ -787,6 +772,7 @@ init
 	//do select_peers;
 		
 		do assign_initial_cognitive_memory;
+		write "initial memory assigned for agent " +int(self);
 		
 	}
 
@@ -846,6 +832,7 @@ init
 		
 		// BEHAVIOR
 		string behavior <- world.choose_behavior(overall_need_satisfaction_aspiration_level_ratio,uncertainty_tolerance_level_ratio);
+		write "behavior = " + behavior;
 		do execute_a_behavior(behavior);
 		
 		

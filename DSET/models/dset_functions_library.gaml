@@ -24,6 +24,50 @@ global{
 		return gnn;
 	}
 	
+	 // function to get travel time for a given mode = expected travel time for next trip as per the model
+
+
+// float get_expected_travel_time_for_a_mode (inhabitants i, int mode)
+//{
+//	float travel_time;
+//	switch mode
+//	{
+//		match 1
+//		{
+//			travel_time <- gauss(mean(i.memory_bike_times), standard_deviation(i.memory_bike_times));
+//		}
+//
+//		match 2
+//		{
+//			travel_time <- gauss(mean(i.memory_walk_times), standard_deviation(i.memory_walk_times));
+//		}
+//
+//		match 3
+//		{
+//			travel_time <- gauss(mean(i.memory_pt_times), standard_deviation(i.memory_pt_times));
+//		}
+//
+//		match 4
+//		{
+//			travel_time <- gauss(mean(i.memory_car_times), standard_deviation(i.memory_car_times));
+//		}
+//	}
+//	return travel_time;
+//}
+	
+	
+//	//function to get expected time for all modes, argument = self
+//map get_expected_travel_time_for_all_modes (inhabitants i)
+//{
+//	map<string, float> expected_travel_time_all_modes;
+//	expected_travel_time_all_modes["bike"] <- gauss(mean(i.memory_bike_times), standard_deviation(i.memory_bike_times));
+//	expected_travel_time_all_modes["walk"] <- gauss(mean(i.memory_walk_times), standard_deviation(i.memory_walk_times));
+//	expected_travel_time_all_modes["pt"] <- gauss(mean(i.memory_pt_times), standard_deviation(i.memory_pt_times));
+//	expected_travel_time_all_modes["car"] <- gauss(mean(i.memory_car_times), standard_deviation(i.memory_car_times));
+//	return expected_travel_time_all_modes;
+//}
+	
+	
 	
 	float get_linear_forecast(list<float> f, int mode_number){
 		matrix<float> data_matrix <- 0.0 as_matrix {2,length(f)};
