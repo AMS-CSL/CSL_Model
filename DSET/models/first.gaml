@@ -31,7 +31,7 @@ float step <-1 #mn;
 	float proportion_of_offices <- 0.1;
 	float distance_between_homes <- 2000.0;
 	float relative_work_work_distance <- 3000.0;
-	int inhabitant_population <- 10;
+	int inhabitant_population <- 100;
 //TODO check if this below  should be global or agent specific
 	float max_travel_mode_difference <-3.0;
 	
@@ -697,7 +697,7 @@ action calculate_ratio_uncertainty_uncertainty_tolerance_level (string s){
 	float sub_potential_EXISTENCE_need_satisfaction(inhabitants i, int mode){
 		//inhabitant_expected_relative_travel_speed_travel_mode[mode]<- get_linear_forecast(i.mode_specific_memory[mode], mode);
 		write "i entered sub existence need " + i +" with mode "+mode;
-		inhabitant_expected_relative_travel_speed_travel_mode[mode-1]<- get_linear_forecast(i.mode_specific_memory[mode], mode);
+		inhabitant_expected_relative_travel_speed_travel_mode[mode-1]<- get_new_expected_value(i.mode_specific_memory[mode], mode);
 		write "prediction --->" + inhabitant_expected_relative_travel_speed_travel_mode[mode-1];
 		if inhabitant_expected_relative_travel_speed_travel_mode[mode-1] <= avg_my_last_5_days_travel_time{
 			inhabitant_potential_existence_need_satisfaction <-0.0;
@@ -751,7 +751,7 @@ action calculate_ratio_uncertainty_uncertainty_tolerance_level (string s){
 
 	list<int> get_morning_departure_time{
 	
-	int morning_hour <-int(gauss(8,1));
+	int morning_hour <-int(gauss(8,0.5));
 	int morning_minute <- int(rnd(0,60));
 	return [morning_hour, morning_minute];
 	}
@@ -906,8 +906,15 @@ experiment "Main Model" type: gui
 	parameter "Work 2 Work distance" var: relative_work_work_distance min: 1.0 max: 20000.0 step: 100 category: "Peer Calculations";
 	parameter "Distance between peer homes" var: distance_between_homes min: 1.0 max: 5000.0 step: 100 category: "Peer Calculations";
 	/** Insert here the definition of the input and output of the model */
+	
+	
+	
 	output
 	{
+		monitor "bike" value: inhabitants count (each.value_mode_actual = 1) ;
+		monitor "walk" value: inhabitants count (each.value_mode_actual = 2) ;
+		monitor "pt" value: inhabitants count (each.value_mode_actual = 3) ;
+		monitor "car" value: inhabitants count (each.value_mode_actual = 4) ;
 		display d type: java2D
 		{
 			species study_area aspect: a;
@@ -922,7 +929,7 @@ experiment "Main Model" type: gui
 		}
 		
 		display "modes" type:java2D {
-			chart "mode share" type:histogram y_range:{0,10}
+			chart "mode share" type:series y_range:{0,10}
 			
 			
 			
