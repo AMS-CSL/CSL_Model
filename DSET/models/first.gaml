@@ -63,7 +63,7 @@ list<int> work_bike_min <- [19,23];
 	list<string> modes <- ["bike", "walk", "pt", "car"];
 	map<string, float> mode_speed_string <- ["bike"::4.1, "walk"::1.1, "pt"::8.3, "car"::16.6]; //speeds in m/s
 	map<int, float> mode_speed_int <- [1::4.1, 2::1.1, 3::8.3, 4::16.6];
-	map<string, int> mode_value <- ["bike"::1, "walk"::2, "pt"::3, "car"::4];
+	map<string, int> mode_value <- ["bike"::1, "walk"::2, "pt"::3, "car"::4]; // integer identifier for mode
 	
 	
 	init
@@ -929,8 +929,9 @@ experiment "Main Model" type: gui
 		}
 		
 		display "modes" type:java2D {
-			chart "mode share" type:series y_range:{0,10}
-			
+			chart "mode share" type:histogram
+			style:stack
+			y_range:{0,inhabitant_population}
 			
 			
 			{
