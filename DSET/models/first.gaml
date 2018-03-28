@@ -697,7 +697,7 @@ action calculate_ratio_uncertainty_uncertainty_tolerance_level (string s){
 	float sub_potential_EXISTENCE_need_satisfaction(inhabitants i, int mode){
 		//inhabitant_expected_relative_travel_speed_travel_mode[mode]<- get_linear_forecast(i.mode_specific_memory[mode], mode);
 		write "i entered sub existence need " + i +" with mode "+mode;
-		inhabitant_expected_relative_travel_speed_travel_mode[mode-1]<- get_new_expected_value(i.mode_specific_memory[mode], mode);
+		inhabitant_expected_relative_travel_speed_travel_mode[mode-1]<- get_linear_forecast(i.mode_specific_memory[mode], mode);
 		write "prediction --->" + inhabitant_expected_relative_travel_speed_travel_mode[mode-1];
 		if inhabitant_expected_relative_travel_speed_travel_mode[mode-1] <= avg_my_last_5_days_travel_time{
 			inhabitant_potential_existence_need_satisfaction <-0.0;
@@ -871,7 +871,7 @@ init
 		{
 			//draw circle(50) color: rgb(# blue, 0.2) empty: true;
 //			draw circle(20) color: rgb(((modes index_of my_mode_actual) + 10) * 60, 100, 100);
-	draw circle(mode_speed_int[self.value_mode_actual]*2) color:#red;
+	draw circle(mode_speed_int[self.value_mode_actual]*5) color:#red;
 			//draw string(int(self)) color: # white font: font('Helvetica Neue', 12, # bold + # italic);
 			ask my_peers
 			{
@@ -880,7 +880,7 @@ init
 
 		} else
 		{
-			draw circle(mode_speed_int[self.value_mode_actual]*2) color:#cyan;
+			draw circle(mode_speed_int[self.value_mode_actual]*4) color:#cyan;
 			
 			//draw circle(20) color: rgb((modes index_of (my_mode_actual)) * 60, 0, 0);
 			//draw string(int(self)) color: # white font: font('Helvetica Neue', 12, # bold);
@@ -915,6 +915,24 @@ experiment "Main Model" type: gui
 			species roads aspect: a;
 			species inhabitants aspect: a ;
 			species inhabitants aspect: b;
+			graphics "Info Text" refresh:true {
+				draw string(current_date, "dd-MM-yyyy HH:mm:ss")  at:{0,4000} color: # black font: font('Helvetica Neue', 32,   # italic) ;
+				
+				}
+		}
+		
+		display "modes" type:java2D {
+			chart "mode share" type:histogram y_range:{0,10}
+			
+			
+			
+			{
+				data "bike" value:(inhabitants count (each.value_mode_actual = 1)) color:#blue style:spline thickness:3;
+				data "walk" value:(inhabitants count (each.value_mode_actual = 2)) color:#red style:spline;
+				data "pt" value:(inhabitants count (each.value_mode_actual = 3)) color:#green style:spline;
+				data "car" value:(inhabitants count (each.value_mode_actual = 4)) color:#orange style:spline;
+			}
+			
 		}
 
 	}
