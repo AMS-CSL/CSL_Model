@@ -17,7 +17,8 @@ global
 	
 date starting_date <- date("2018-03-20 00:00:01");
 float step <-1 #mn;
-
+bool inverse_speed <-true;
+bool expected_linear <- true;
 
 
 
@@ -62,12 +63,16 @@ list<int> work_bike_min <- [19,23];
 	/** Insert the global definitions, variables and actions here */
 	list<string> modes <- ["bike", "walk", "pt", "car"];
 	map<string, float> mode_speed_string <- ["bike"::4.1, "walk"::1.1, "pt"::8.3, "car"::16.6]; //speeds in m/s
+	
 	map<int, float> mode_speed_int <- [1::4.1, 2::1.1, 3::8.3, 4::16.6];
 	map<string, int> mode_value <- ["bike"::1, "walk"::2, "pt"::3, "car"::4]; // integer identifier for mode
 	
 	
 	init
 	{
+		if inverse_speed {
+		 mode_speed_int <- [1::1/4.1, 2::1/1.1, 3::1/8.3, 4::1/16.6];
+		}
 		create study_area from: shape_file_bounds;
 		create roads from: shape_file_streets;
 		create buildings from: shape_buildings
@@ -213,12 +218,13 @@ float my_aspiration <- rnd(1.0);
 	 list<float> memory_all_modes; // list of 5
 	 map<string,float> my_expected_travel_time_all_modes <- ["bike"::0.0,"walk"::0.0,"pt"::0.0, "car"::0.0];
 	 map<string,float> my_uncertainty_travel_time_all_modes <- ["bike"::0.0,"walk"::0.0,"pt"::0.0, "car"::0.0];
-
+	string behavior;
 
 
 
 	// TIME VARIABLES
-	list<int> my_morning_home_depart_time ;
+	list<int> my_morning_home_depart_time ;//mdt
+	float mdt ;//<-my_morning_home_depart_time[0]+(my_morning_home_depart_time[1]/60)*100;
 	date my_morning_office_arrive_time;
 	date my_evening_home_arrive_time;
 	
@@ -697,9 +703,15 @@ action calculate_ratio_uncertainty_uncertainty_tolerance_level (string s){
 	float sub_potential_EXISTENCE_need_satisfaction(inhabitants i, int mode){
 		//inhabitant_expected_relative_travel_speed_travel_mode[mode]<- get_linear_forecast(i.mode_specific_memory[mode], mode);
 		write "i entered sub existence need " + i +" with mode "+mode;
-		inhabitant_expected_relative_travel_speed_travel_mode[mode-1]<- get_new_expected_value(i.mode_specific_memory[mode], mode);
+		if expected_linear{
+			inhabitant_expected_relative_travel_speed_travel_mode[mode-1]<- get_linear_forecast(i.mode_specific_memory[mode], mode);
+		} 
+		else{
+			inhabitant_expected_relative_travel_speed_travel_mode[mode-1]<- get_new_expected_value(i.mode_specific_memory[mode], mode);
+		}
+		
 		write "prediction --->" + inhabitant_expected_relative_travel_speed_travel_mode[mode-1];
-		if inhabitant_expected_relative_travel_speed_travel_mode[mode-1] <= avg_my_last_5_days_travel_time{
+		if inhabitant_expected_relative_travel_speed_travel_mode[mode-1] <= avg_my_last_5_days_travel_time_mode_spefiic{
 			inhabitant_potential_existence_need_satisfaction <-0.0;
 		}
 		else {
@@ -808,6 +820,7 @@ init
 	if current_date.day_of_week <6{ 
 		// inside if is weekday behavior
 		my_morning_home_depart_time <- get_morning_departure_time();
+		mdt <-my_morning_home_depart_time[0]+(my_morning_home_depart_time[1]/60)*100;
 		my_evening_office_depart_time <- get_evening_departure_time();
 		
 	}
@@ -831,7 +844,7 @@ init
 		
 		
 		// BEHAVIOR
-		string behavior <- world.choose_behavior(overall_need_satisfaction_aspiration_level_ratio,uncertainty_tolerance_level_ratio);
+		 behavior <- world.choose_behavior(overall_need_satisfaction_aspiration_level_ratio,uncertainty_tolerance_level_ratio);
 		write "behavior = " + behavior;
 		do execute_a_behavior(behavior);
 		
@@ -902,13 +915,14 @@ experiment "Main Model" type: gui
 {
 	float seed <- 0.8484812926428652;
 	parameter "Proportion of offices in landuse" var: proportion_of_offices min: 0.0 max: 1.0 step: 0.1 category: "Global Model Parameters";
+	parameter "Inverse speed" var:inverse_speed category: "Clarify";
+	parameter "Linear Forecast" var:expected_linear category: "Clarify";
 	parameter "Total inhabitant population" var: inhabitant_population min: 1 max: 1000 step: 100 category: "Global Model Parameters";
 	parameter "Work 2 Work distance" var: relative_work_work_distance min: 1.0 max: 20000.0 step: 100 category: "Peer Calculations";
 	parameter "Distance between peer homes" var: distance_between_homes min: 1.0 max: 5000.0 step: 100 category: "Peer Calculations";
 	/** Insert here the definition of the input and output of the model */
 	
-	
-	
+
 	output
 	{
 		monitor "bike" value: inhabitants count (each.value_mode_actual = 1) ;
@@ -928,20 +942,45 @@ experiment "Main Model" type: gui
 				}
 		}
 		
-		display "modes" type:java2D {
-			chart "mode share" type:histogram
-			style:stack
-			y_range:{0,inhabitant_population}
-			
-			
+//		display "modal share" type:java2D refresh: every(#day) {
+//			chart "mode share" type:series 
+//			y_range:{0,1000}
+//			{
+//				data "bike" value:(inhabitants count (each.value_mode_actual = 1)) color:#blue style:spline thickness:2 marker:false;
+//				data "walk" value:(inhabitants count (each.value_mode_actual = 2)) color:#red style:spline thickness:2 marker:false;
+//				data "pt" value:(inhabitants count (each.value_mode_actual = 3)) color:#green style:spline thickness:2 marker:false;
+//				data "car" value:(inhabitants count (each.value_mode_actual = 4)) color:#maroon style:spline thickness:2 marker:false;
+//			}
+//			
+//		}// shall i run the model?
+		
+		display "modal share" type:java2D refresh: every(1#day) {
+			chart "mode share" type:series 
+			//y_range:{0,1000}
 			{
-				data "bike" value:(inhabitants count (each.value_mode_actual = 1)) color:#blue style:spline thickness:3;
-				data "walk" value:(inhabitants count (each.value_mode_actual = 2)) color:#red style:spline;
-				data "pt" value:(inhabitants count (each.value_mode_actual = 3)) color:#green style:spline;
-				data "car" value:(inhabitants count (each.value_mode_actual = 4)) color:#orange style:spline;
+				data "bike" value:length(list(inhabitants) where (each.value_mode_actual = 1)) color:#blue  thickness:2 marker:false;
+				data "walk" value:length(list(inhabitants) where (each.value_mode_actual = 2)) color:#red  thickness:2 marker:false;
+				data "pt" value:length(list(inhabitants) where (each.value_mode_actual = 3)) color:#green  thickness:2 marker:false;
+				data "car" value:length(list(inhabitants) where (each.value_mode_actual = 4)) color:#maroon  thickness:2 marker:false;
 			}
 			
 		}
+		
+		display "decisions" type:java2D {
+			chart "decision made" type:histogram
+			
+			
+			
+			{
+				data "repeat" value:(inhabitants count (each.behavior = "repeat")) 	 color:#blue style:spline thickness:3;
+				data "imitate" value:(inhabitants count (each.behavior = "imitate")) 	color:#red style:spline;
+				data "inquire" value:(inhabitants count (each.behavior = "inquire")) 	color:#green style:spline;
+				data "optimize" value:(inhabitants count (each.behavior = "optimize")) 	 color:#orange style:spline;
+			}
+			
+		}
+		
+		
 
 	}
 
