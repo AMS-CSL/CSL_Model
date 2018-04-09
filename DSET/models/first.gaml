@@ -956,6 +956,7 @@ experiment "Main Model" type: gui
 		
 		display "modal share" type:java2D refresh: every(1#day) {
 			chart "mode share" type:series 
+			style:spline
 			//y_range:{0,1000}
 			{
 				data "bike" value:length(list(inhabitants) where (each.value_mode_actual = 1)) color:#blue  thickness:2 marker:false;
