@@ -875,7 +875,7 @@ init
 		do morning_movement;
 	}
 	
-	reflex every_evening when:current_date.hour = my_evening_office_depart_time[0] and current_date.minute = my_evening_office_depart_time[1] and !(my_home covers location) and current_date.day_of_week <6
+	reflex every_evening when:current_date.hour = eodt[0] and current_date.minute = eodt[1] and !(my_home covers location) and current_date.day_of_week <6
 	{
 		objective <-"resting";
 		the_target <- any_location_in(my_home);
@@ -981,7 +981,7 @@ experiment "Main Model" type: gui
 			species study_area aspect: a;
 			species buildings aspect: a refresh:false;
 			species roads aspect: a;
-			species inhabitants aspect: a ;
+			//species inhabitants aspect: a ;
 			species inhabitants aspect: colors;
 			
 			graphics "Info Text" refresh:true {
