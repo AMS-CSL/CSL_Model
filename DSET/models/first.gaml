@@ -23,16 +23,16 @@ bool expected_linear <- true;
 
 
 // THE ENVIRONMENT 
-	file shape_file_streets <- file('../includes/roads/network_extended_RD.shp');
-	file shape_file_bounds <- file("../includes/Boundary_study_area_rough.shp");
-	file shape_buildings <- file("../includes/Buildings_Amsterdam.shp");
+	file shape_file_streets <- file('../includes/buildings/cut_net.shp');
+	file shape_file_bounds <- file("../includes/buildings/cut_extent.shp");
+	file shape_buildings <- file("../includes/buildings/cut_buildings.shp");
 	geometry shape <- envelope(shape_buildings);
 
 	// variables for model parameters
 	float proportion_of_offices <- 0.1;
 	float distance_between_homes <- 2000.0;
 	float relative_work_work_distance <- 3000.0;
-	int inhabitant_population <- 100;
+	int inhabitant_population <- 10;
 //TODO check if this below  should be global or agent specific
 	float max_travel_mode_difference <-3.0;
 	
@@ -70,6 +70,7 @@ list<int> work_bike_min <- [19,23];
 	
 	init
 	{
+		 g <- as_edge_graph(shape_file_streets);
 		if inverse_speed {
 		 mode_speed_int <- [1::1/4.1, 2::1/1.1, 3::1/8.3, 4::1/16.6];
 		}
@@ -91,13 +92,15 @@ list<int> work_bike_min <- [19,23];
 
 		}
 
-		create inhabitants number: inhabitant_population;
+		create inhabitants number: inhabitant_population{
+			 location <- my_home.location;
+		}
 		
 		
 	
 		
 		
-		 g <- as_edge_graph(shape_file_streets);
+		
 	}
 }
 
@@ -125,10 +128,10 @@ species buildings
 		float building_height <- rnd(3.0, 12.0);
 		if use = "office"
 		{
-			my_color <- rgb(# gray, 0.2);
+			my_color <- rgb(# maroon, 0.2);
 		} else
 		{
-			my_color <- rgb(# brown, 0.2);
+			my_color <- rgb(# beige, 0.2);
 		}
 		draw shape color: my_color depth: building_height;
 		draw shape color: my_color at: { location.x, location.y, building_height };
@@ -143,7 +146,7 @@ species roads
 
 	aspect a
 	{
-		draw shape+3 color: # gray;
+		draw shape+1 color: # black;
 	}
 }
 
@@ -173,7 +176,7 @@ float my_aspiration <- rnd(1.0);
 	
 	
 	
-//FIXME  these two below need to change to network characteristics, when we have a clean network
+//FIXME  these two below need to change to network characteristics, when we have a clean networkmy
 	float my_travel_distance <- rnd(1.0,10.0);
 	float my_travel_time <- my_travel_distance / mode_speed_string[my_mode_actual];
 	
@@ -186,7 +189,7 @@ float my_aspiration <- rnd(1.0);
 	//buildings home;
 	
 	buildings my_home <- one_of(buildings where (each.use = "residential"));
-	point location <- my_home.location;
+//	point location <- my_home.location;
 	buildings my_office <- one_of(buildings where (each.use = "office"));
 	
 	
@@ -872,21 +875,28 @@ init
 		do evening_movement;
 	}
 	
-	action morning_movement {
-	float my_speed <- mode_speed_int[self.value_mode_actual] #km/#h;
-	do goto target:my_office on:g speed:my_speed;
-	if location = my_office.location{
-		my_morning_office_arrive_time <- current_date;
-		my_morning_travel_time <- my_morning_office_arrive_time - my_morning_home_depart_time;
-	}
+	action morning_movement
+	{
+		float my_speed <- mode_speed_int[self.value_mode_actual] # km / # h;
+		do goto target: any_location_in(my_office) on: g speed: my_speed;
+		
+		if location = my_office.location
+		{
+			my_morning_office_arrive_time <- current_date;
+			my_morning_travel_time <- my_morning_office_arrive_time - my_morning_home_depart_time;
+		}
+
 	}
 
-	action evening_movement {
-	float my_speed <- mode_speed_int[self.value_mode_actual] #km/#h;
-	do goto target:my_home on:g speed:my_speed;
-	if location = my_home.location{
-		my_evening_home_arrive_time <- current_date;
-	}
+	action evening_movement
+	{
+		float my_speed <- mode_speed_int[self.value_mode_actual] # km / # h;
+		do goto target: any_location_in(my_home) on: g speed: my_speed;
+		if location = my_home.location
+		{
+			my_evening_home_arrive_time <- current_date;
+		}
+
 	}
 
 
@@ -917,6 +927,16 @@ init
 	
 	aspect b{
 		draw link(self, my_office) color:#red size:10;
+	}
+	
+	aspect colors{
+		if  my_office covers self.location{
+			draw circle(30) color:#blue;
+		} else if  my_home covers self.location{
+			draw circle(30) color:#yellow;
+		} else {
+			draw circle(30) color:#lime;
+		}
 	}
 
 }
@@ -950,6 +970,7 @@ experiment "Main Model" type: gui
 			species buildings aspect: a refresh:false;
 			species roads aspect: a;
 			species inhabitants aspect: a ;
+			species inhabitants aspect: colors;
 			species inhabitants aspect: b;
 			graphics "Info Text" refresh:true {
 				draw string(current_date, "dd-MM-yyyy HH:mm:ss")  at:{0,4000} color: # black font: font('Helvetica Neue', 32,   # italic) ;
@@ -994,6 +1015,15 @@ experiment "Main Model" type: gui
 				data "optimize" value:(inhabitants count (each.behavior = "optimize")) 	 color:#orange style:spline;
 			}
 			
+		}
+		
+		display "travel time"{
+			chart "travel time" type:histogram{
+				data "car" value:mean((inhabitants where (each.my_mode_actual = "car")) collect (each.my_morning_travel_time))	 color:#blue style:spline thickness:3;
+				data "pt" value:mean((inhabitants where (each.my_mode_actual = "pt")) collect (each.my_morning_travel_time)) 	color:#red style:spline;
+				data "walk" value:mean((inhabitants where (each.my_mode_actual = "walk"))  collect (each.my_morning_travel_time))	color:#green style:spline;
+				data "bike" value:mean((inhabitants where (each.my_mode_actual = "bike"))  collect (each.my_morning_travel_time))	 color:#orange style:spline;
+			}
 		}
 		
 		
