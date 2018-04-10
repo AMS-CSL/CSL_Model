@@ -17,7 +17,7 @@ global
 	
 date starting_date <- date("2018-03-20 00:00:01");
 float step <-1 #mn;
-bool inverse_speed <-true;
+bool inverse_speed <-false;
 bool expected_linear <- true;
 
 
@@ -32,7 +32,7 @@ bool expected_linear <- true;
 	float proportion_of_offices <- 0.1;
 	float distance_between_homes <- 2000.0;
 	float relative_work_work_distance <- 3000.0;
-	int inhabitant_population <- 10;
+	int inhabitant_population <- 100;
 //TODO check if this below  should be global or agent specific
 	float max_travel_mode_difference <-3.0;
 	
@@ -119,8 +119,8 @@ species buildings
 			my_color <- rgb(# saddlebrown);
 		}
 
-		draw shape color: my_color depth: building_height;
-		draw shape color: my_color at: { location.x, location.y, building_height };
+		draw shape color: my_color ;
+		//draw shape color: my_color at: { location.x, location.y, building_height };
 	}
 
 	aspect transparent_frame
@@ -128,13 +128,13 @@ species buildings
 		float building_height <- rnd(3.0, 12.0);
 		if use = "office"
 		{
-			my_color <- rgb(# maroon, 0.2);
+			my_color <- rgb(#olive, 0.2);
 		} else
 		{
 			my_color <- rgb(# beige, 0.2);
 		}
 		draw shape color: my_color depth: building_height;
-		draw shape color: my_color at: { location.x, location.y, building_height };
+		//draw shape color: my_color at: { location.x, location.y, building_height };
 	}
 }
 
@@ -166,8 +166,8 @@ float ambition_level <- rnd(1.0);
 float uncertainty_tolerance_level <- rnd(1.0);
 int cognitive_effort <- 5;
 float my_aspiration <- rnd(1.0);
-
-	
+string objective <- "resting"; // resting means at home or heating home ; working means at office or heading to office
+point the_target <- nil;
 // TRAVEL ATTRIBUTES
 	string my_mode_preferred <- one_of(modes);
 	string my_mode_actual <- one_of(modes);
@@ -601,7 +601,7 @@ action calculate_ratio_uncertainty_uncertainty_tolerance_level (string s){
 	//------------------- IMITATE (parameter coming into this function = self)
 	// what does it do? = adopts the mode that is most used by peers
 	int imitates (inhabitants i){
-		write "imitates inhabitant" + i;
+		//write "imitates inhabitant" + i;
 		int mode;
 		// what are peers doing;
 		list<int> peer_modes <- i.my_peers collect (each.value_mode_actual);
@@ -615,7 +615,7 @@ action calculate_ratio_uncertainty_uncertainty_tolerance_level (string s){
 	//-------------------  REPEAT  ( parameter coming into this function  = self)
 	// what does it do ? = just continues with the mode from previous step 
 	int repeats (inhabitants i){
-		write "repeats inhabitant" + i;
+		//write "repeats inhabitant" + i;
 		int mode <- i.value_mode_actual;
 		return mode;
 	}
@@ -624,7 +624,7 @@ action calculate_ratio_uncertainty_uncertainty_tolerance_level (string s){
 	// what does it do? it first lists all the modes being used by the population, then checks what is more suitable than current choice
 	 int inquires (inhabitants i){
 	 	int mode;
-		write "inquiring inhabitant" + i;
+		//write "inquiring inhabitant" + i;
 		list<int> peer_modes <- (remove_duplicates(i.my_peers collect (each.value_mode_actual)))-i.my_mode_actual;// what are peers using;
 //FIXME does inhabitant evaluate also own mode here or only of the peers? 		
 		
@@ -651,7 +651,7 @@ action calculate_ratio_uncertainty_uncertainty_tolerance_level (string s){
 	
 	 int optimizes (inhabitants i){
 	 	int mode;
-		write "optimizes inhabitant" + i;
+		//write "optimizes inhabitant" + i;
 		list<int> peer_modes <- [1,2,3,4];// what are peers using;
 //FIXME does inhabitant evaluate also own mode here or only of the peers? 		
 		
@@ -659,16 +659,16 @@ action calculate_ratio_uncertainty_uncertainty_tolerance_level (string s){
 			loop ii over: peer_modes{
 			list<float> my_inquiry_each_mode_used  ;// <-[];
 			add sub_potential_PERSONAL_need_satisfaction(i, ii) to:my_inquiry_each_mode_used;
-			write my_inquiry_each_mode_used;
+			//write my_inquiry_each_mode_used;
 			add sub_potential_EXISTENCE_need_satisfaction(i, ii) to:my_inquiry_each_mode_used;
-			write my_inquiry_each_mode_used;
+			//write my_inquiry_each_mode_used;
 			add sub_potential_SOCIAL_need_satisfaction(i, ii) to:my_inquiry_each_mode_used;
-			write my_inquiry_each_mode_used;
+			//write my_inquiry_each_mode_used;
 			add sub_potential_OVERALL_need_satisfaction(i, ii) to:my_inquiry_each_mode_used;
-			write my_inquiry_each_mode_used;
+			//write my_inquiry_each_mode_used;
 			inquiry_per_mode[ii] <- my_inquiry_each_mode_used; // maps a mode to four sub-procedure results eg. 1::[1,2,3,4]
 			
-		}write inquiry_per_mode;
+		}//write inquiry_per_mode;
 		} else {
 			warn "Agent " + i +  "has no peers to optimize";
 		}
@@ -686,7 +686,7 @@ action calculate_ratio_uncertainty_uncertainty_tolerance_level (string s){
 	
 
 	float sub_potential_PERSONAL_need_satisfaction (inhabitants i, int mode){
-		write "i entered personal need " + i +" with mode "+mode;
+		//write "i entered personal need " + i +" with mode "+mode;
 		float potential_personal_need_statisfaction;
 		if (abs(mode - i.value_mode_preferred) = 0){
 			 potential_personal_need_statisfaction <- 0.0;
@@ -700,7 +700,7 @@ action calculate_ratio_uncertainty_uncertainty_tolerance_level (string s){
 	
 	
 	float sub_potential_SOCIAL_need_satisfaction (inhabitants i, int mode){
-		write "i entered social need  " + i +" with mode "+mode;
+		//write "i entered social need  " + i +" with mode "+mode;
 		float potential_similarity_with_travel_mode <- length(i.my_peers where (each.value_mode_actual = mode))/ length(i.my_peers);
 		inhabitant_potential_social_need_satisfaction_travel <- (potential_similarity_with_travel_mode + i.superior_to_peers_ratio)/2.0;
 		return inhabitant_potential_social_need_satisfaction_travel;
@@ -710,7 +710,7 @@ action calculate_ratio_uncertainty_uncertainty_tolerance_level (string s){
 
 	float sub_potential_EXISTENCE_need_satisfaction(inhabitants i, int mode){
 		//inhabitant_expected_relative_travel_speed_travel_mode[mode]<- get_linear_forecast(i.mode_specific_memory[mode], mode);
-		write "i entered sub existence need " + i +" with mode "+mode;
+		//write "i entered sub existence need " + i +" with mode "+mode;
 		if expected_linear{
 			inhabitant_expected_relative_travel_speed_travel_mode[mode-1]<- get_linear_forecast(i.mode_specific_memory[mode], mode);
 		} 
@@ -718,7 +718,7 @@ action calculate_ratio_uncertainty_uncertainty_tolerance_level (string s){
 			inhabitant_expected_relative_travel_speed_travel_mode[mode-1]<- get_new_expected_value(i.mode_specific_memory[mode], mode);
 		}
 		
-		write "prediction --->" + inhabitant_expected_relative_travel_speed_travel_mode[mode-1];
+		//write "prediction --->" + inhabitant_expected_relative_travel_speed_travel_mode[mode-1];
 		if inhabitant_expected_relative_travel_speed_travel_mode[mode-1] <= avg_my_last_5_days_travel_time_mode_spefiic{
 			inhabitant_potential_existence_need_satisfaction <-0.0;
 		}
@@ -730,7 +730,7 @@ action calculate_ratio_uncertainty_uncertainty_tolerance_level (string s){
 	}
 	
 	float sub_potential_OVERALL_need_satisfaction(inhabitants i, int mode){
-		write "i entered overall need " + i + " with mode "+mode;
+		//write "i entered overall need " + i + " with mode "+mode;
 		float inhabitants_potential_overall_need_satisfaction <- 
 		(inhabitant_relative_importance_existence_need * inhabitant_potential_existence_need_satisfaction)
 		+(inhabitant_relative_importance_social_need * inhabitant_potential_social_need_satisfaction_travel)
@@ -754,7 +754,7 @@ action calculate_ratio_uncertainty_uncertainty_tolerance_level (string s){
 		regression my_regression_model  <- build(data_matrix);
 		//write my_regression_model;
 		float my_prediction <-  predict(my_regression_model, [length(f)]);
-		write "i am inhabitant"+ int(self)+ " using mode " + string(mode_number) + "_ " + my_prediction;
+		//write "i am inhabitant"+ int(self)+ " using mode " + string(mode_number) + "_ " + my_prediction;
 		return my_prediction;
 	}
 	
@@ -763,7 +763,7 @@ action calculate_ratio_uncertainty_uncertainty_tolerance_level (string s){
 	float get_new_expected_value(list<float> f, int mode_number){
 		float my_pred;
 		my_pred <- gauss(mean(f), standard_deviation(f));
-		write "inside function to get expected value " + my_pred;
+		//write "inside function to get expected value " + my_pred;
 		
 		return my_pred;
 	}
@@ -779,7 +779,7 @@ action calculate_ratio_uncertainty_uncertainty_tolerance_level (string s){
 
 	list<int> get_evening_departure_time{
 	
-	int evening_hour <-int(gauss(17,1));
+	int evening_hour <-int(gauss(17,0.05));
 	int evening_minute <- int(rnd(0,60));
 	return [evening_hour, evening_minute];
 	}
@@ -853,7 +853,7 @@ init
 		
 		// BEHAVIOR
 		 behavior <- world.choose_behavior(overall_need_satisfaction_aspiration_level_ratio,uncertainty_tolerance_level_ratio);
-		write "behavior = " + behavior;
+		//write "behavior = " + behavior;
 		do execute_a_behavior(behavior);
 		
 		
@@ -865,25 +865,36 @@ init
 	{
 		
 		my_morning_home_depart_time <-current_date;
-		do morning_movement;
+		objective <- "working";
+		the_target <- any_location_in(my_office);
+		
 		
 	}
 	
+	reflex working_behavior when:objective = "working" and !(my_office covers location){
+		do morning_movement;
+	}
 	
 	reflex every_evening when:current_date.hour = my_evening_office_depart_time[0] and current_date.minute = my_evening_office_depart_time[1] and !(my_home covers location) and current_date.day_of_week <6
 	{
+		objective <-"resting";
+		the_target <- any_location_in(my_home);
+	}
+	
+	reflex resting_behavior when:objective = "resting" and !(my_home covers location) {
 		do evening_movement;
 	}
 	
 	action morning_movement
 	{
 		float my_speed <- mode_speed_int[self.value_mode_actual] # km / # h;
-		do goto target: any_location_in(my_office) on: g speed: my_speed;
+		do goto target: the_target on: g speed: my_speed;
 		
-		if location = my_office.location
+		if the_target = location
 		{
 			my_morning_office_arrive_time <- current_date;
 			my_morning_travel_time <- my_morning_office_arrive_time - my_morning_home_depart_time;
+			the_target <- nil;
 		}
 
 	}
@@ -892,7 +903,7 @@ init
 	{
 		float my_speed <- mode_speed_int[self.value_mode_actual] # km / # h;
 		do goto target: any_location_in(my_home) on: g speed: my_speed;
-		if location = my_home.location
+		if the_target = location
 		{
 			my_evening_home_arrive_time <- current_date;
 		}
@@ -949,6 +960,7 @@ init
 experiment "Main Model" type: gui
 {
 	float seed <- 0.8484812926428652;
+	float minimum_cycle_duration <-0.1;
 	parameter "Proportion of offices in landuse" var: proportion_of_offices min: 0.0 max: 1.0 step: 0.1 category: "Global Model Parameters";
 	parameter "Inverse speed" var:inverse_speed category: "Clarify";
 	parameter "Linear Forecast" var:expected_linear category: "Clarify";
@@ -971,7 +983,7 @@ experiment "Main Model" type: gui
 			species roads aspect: a;
 			species inhabitants aspect: a ;
 			species inhabitants aspect: colors;
-			species inhabitants aspect: b;
+			
 			graphics "Info Text" refresh:true {
 				draw string(current_date, "dd-MM-yyyy HH:mm:ss")  at:{0,4000} color: # black font: font('Helvetica Neue', 32,   # italic) ;
 				
