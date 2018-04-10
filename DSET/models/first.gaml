@@ -223,12 +223,17 @@ float my_aspiration <- rnd(1.0);
 
 
 	// TIME VARIABLES
-	list<int> my_morning_home_depart_time ;//mdt
-	float mdt ;//<-my_morning_home_depart_time[0]+(my_morning_home_depart_time[1]/60)*100;
+	list<int> mhdt ; //morning home departure time , used in this format just to use a guassian function
+	date my_morning_home_depart_time ;//<-my_morning_home_depart_time[0]+(my_morning_home_depart_time[1]/60)*100;
 	date my_morning_office_arrive_time;
-	date my_evening_home_arrive_time;
+	float my_morning_travel_time;
+	date my_evening_travel_time;
 	
-	list<int> my_evening_office_depart_time ;
+	
+	date my_evening_home_arrive_time;
+	date my_evening_office_depart_time;
+	list<int> eodt ; //evening office departure time , used in this format just to use a guassian function
+	
 	
 	
 	
@@ -819,9 +824,9 @@ init
 	
 	if current_date.day_of_week <6{ 
 		// inside if is weekday behavior
-		my_morning_home_depart_time <- get_morning_departure_time();
-		mdt <-my_morning_home_depart_time[0]+(my_morning_home_depart_time[1]/60)*100;
-		my_evening_office_depart_time <- get_evening_departure_time();
+		mhdt <- get_morning_departure_time();
+		//mdt <-mdt[0]+(mdt[1]/60)*100;
+		eodt <- get_evening_departure_time();
 		
 	}
 	
@@ -853,9 +858,12 @@ init
 	}
 
 
-	reflex every_morning when:current_date.hour = my_morning_home_depart_time[0] and current_date.minute = my_morning_home_depart_time[1] and !(my_office covers location) and current_date.day_of_week <6
+	reflex every_morning when:current_date.hour = mhdt[0] and current_date.minute = mhdt[1] and !(my_office covers location) and current_date.day_of_week <6
 	{
+		
+		my_morning_home_depart_time <-current_date;
 		do morning_movement;
+		
 	}
 	
 	
@@ -867,11 +875,18 @@ init
 	action morning_movement {
 	float my_speed <- mode_speed_int[self.value_mode_actual] #km/#h;
 	do goto target:my_office on:g speed:my_speed;
+	if location = my_office.location{
+		my_morning_office_arrive_time <- current_date;
+		my_morning_travel_time <- my_morning_office_arrive_time - my_morning_home_depart_time;
+	}
 	}
 
 	action evening_movement {
 	float my_speed <- mode_speed_int[self.value_mode_actual] #km/#h;
 	do goto target:my_home on:g speed:my_speed;
+	if location = my_home.location{
+		my_evening_home_arrive_time <- current_date;
+	}
 	}
 
 
@@ -956,7 +971,7 @@ experiment "Main Model" type: gui
 		
 		display "modal share" type:java2D refresh: every(1#day) {
 			chart "mode share" type:series 
-			style:spline
+			//style:spline
 			//y_range:{0,1000}
 			{
 				data "bike" value:length(list(inhabitants) where (each.value_mode_actual = 1)) color:#blue  thickness:2 marker:false;

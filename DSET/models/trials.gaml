@@ -10,9 +10,15 @@ global {
 	map<string, int> msi;
 	int i <- 1 among:ln parameter:true;
 	date starting_date <- date("2018-03-21 14:10:01");
+	date sd <-date([2010,10,10, 11,11,11]);
 	
 	init { 
 		write "today is " + starting_date.day_of_week;
+		write sd;
+		//date kd <- date([list(sd[0]),list(sd[1]),list(sd[2]), 0, 0 ,0]) plus_hours 10;
+		date d<- date(string(sd,"yyyy-MM-dd"));
+		d <- d  plus_hours 10;
+		write "difference in two times (seconds) 4260 sec - 71 min" + (sd -d)/60 + " seconds " + (sd-d);
 		//write 
 		map<int,list<float>> mmm;
 		int ik <- 2;
