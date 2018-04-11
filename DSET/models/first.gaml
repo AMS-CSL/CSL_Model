@@ -65,6 +65,7 @@ list<int> work_bike_min <- [19,23];
 	map<string, float> mode_speed_string <- ["bike"::4.1, "walk"::1.1, "pt"::8.3, "car"::16.6]; //speeds in m/s
 	
 	map<int, float> mode_speed_int <- [1::4.1, 2::1.1, 3::8.3, 4::16.6];
+	
 	map<string, int> mode_value <- ["bike"::1, "walk"::2, "pt"::3, "car"::4]; // integer identifier for mode
 	
 	
@@ -94,6 +95,7 @@ list<int> work_bike_min <- [19,23];
 
 		create inhabitants number: inhabitant_population{
 			 location <- my_home.location;
+			 my_morning_office_distance <- distance_between(topology(g),[my_home, my_office]);
 		}
 		
 		
@@ -179,6 +181,7 @@ point the_target <- nil;
 //FIXME  these two below need to change to network characteristics, when we have a clean networkmy
 	float my_travel_distance <- rnd(1.0,10.0);
 	float my_travel_time <- my_travel_distance / mode_speed_string[my_mode_actual];
+	float my_morning_office_distance;
 	
 	
 	
@@ -887,21 +890,30 @@ init
 	
 	action morning_movement
 	{
-		float my_speed <- mode_speed_int[self.value_mode_actual] # km / # h;
+		float my_speed <- mode_speed_int[self.value_mode_actual] ;//# m / # sec;
 		do goto target: the_target on: g speed: my_speed;
 		
-		if the_target = location
+		if (the_target = location) or (my_office covers self)
 		{
 			my_morning_office_arrive_time <- current_date;
 			my_morning_travel_time <- my_morning_office_arrive_time - my_morning_home_depart_time;
+			do update_mode_specific_memory(my_morning_travel_time, self.value_mode_actual);
 			the_target <- nil;
 		}
 
 	}
+	
+	
+	action update_mode_specific_memory (float tt, int mode){
+		//morn_tt is morning_travel_time
+		add tt to:self.mode_specific_memory[mode];
+		remove index:0 from:self.mode_specific_memory[mode];
+		
+	}
 
 	action evening_movement
 	{
-		float my_speed <- mode_speed_int[self.value_mode_actual] # km / # h;
+		float my_speed <- mode_speed_int[self.value_mode_actual] ;// # m / # sec;
 		do goto target: any_location_in(my_home) on: g speed: my_speed;
 		if the_target = location
 		{

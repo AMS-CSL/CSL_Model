@@ -19,6 +19,13 @@ global {
 		date d<- date(string(sd,"yyyy-MM-dd"));
 		d <- d  plus_hours 10;
 		write "difference in two times (seconds) 4260 sec - 71 min" + (sd -d)/60 + " seconds " + (sd-d);
+		
+		
+		list<int> L1 <- [1,2,3];
+		add 4 to: L1;
+		remove index:0 from:L1;
+		write "removed first and added last from L1 "+ L1;
+		
 		//write 
 		map<int,list<float>> mmm;
 		int ik <- 2;
