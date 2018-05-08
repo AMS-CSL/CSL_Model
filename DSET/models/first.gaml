@@ -15,7 +15,7 @@ global
 	
 	
 	
-date starting_date <- date("2018-03-20 00:00:01");
+date starting_date <- date("2018-05-07 00:00:01");
 float step <-1 #mn;
 bool inverse_speed <-false;
 bool expected_linear <- true;
@@ -26,13 +26,14 @@ bool expected_linear <- true;
 	file shape_file_streets <- file('../includes/buildings/cut_net.shp');
 	file shape_file_bounds <- file("../includes/buildings/cut_extent.shp");
 	file shape_buildings <- file("../includes/buildings/cut_buildings.shp");
+	file water <- file("../includes/buildings/cut_water.shp");
 	geometry shape <- envelope(shape_buildings);
 
 	// variables for model parameters
 	float proportion_of_offices <- 0.1;
 	float distance_between_homes <- 2000.0;
 	float relative_work_work_distance <- 3000.0;
-	int inhabitant_population <- 100;
+	int inhabitant_population <- 10;
 //TODO check if this below  should be global or agent specific
 	float max_travel_mode_difference <-3.0;
 	
@@ -178,9 +179,9 @@ point the_target <- nil;
 	
 	
 	
-//FIXME  these two below need to change to network characteristics, when we have a clean networkmy
+//FIXME  these two below need to change to network characteristics, when we have a clean network
 	float my_travel_distance <- rnd(1.0,10.0);
-	float my_travel_time <- my_travel_distance / mode_speed_string[my_mode_actual];
+	float my_travel_time ;//<- my_travel_distance / mode_speed_string[my_mode_actual];
 	float my_morning_office_distance;
 	
 	
@@ -228,12 +229,13 @@ point the_target <- nil;
 
 
 
-	// TIME VARIABLES
+	// TIME VARIABLES  // CAREFUL: ---- TRAVEL TIME OR DIFFERENCE IN DATES VARIABLES IS  CAPTURED IN SECONDS
 	list<int> mhdt ; //morning home departure time , used in this format just to use a guassian function
 	date my_morning_home_depart_time ;//<-my_morning_home_depart_time[0]+(my_morning_home_depart_time[1]/60)*100;
 	date my_morning_office_arrive_time;
-	float my_morning_travel_time;
-	date my_evening_travel_time;
+	
+	float my_morning_travel_time ; // value in seconds
+	float my_evening_travel_time ; // value in seconds
 	
 	
 	date my_evening_home_arrive_time;
@@ -411,19 +413,20 @@ point the_target <- nil;
 	}
 			
 //------------------------------------------------------------ 2B CALCULATE SUPERIORITY ----------------------------------------------------------
-//TODO check for travel speed and travel distance conflicts, currently it is all random numbers
+//TODO does an agent compare his mode travel time with peers of any mode or just own mode? Ask Erika
 
 	float calculate_superiority(list<inhabitants> _peers)
 	{
 
-		list<float> difference_with_my_peers <- _peers collect (each.my_travel_time - self.my_travel_time);
+		list<float> difference_with_my_peers <- _peers collect (each.my_morning_travel_time - self.my_morning_travel_time);
 		//write difference_with_my_peers;
-		if my_travel_time > mean(_peers collect (each.my_travel_time)){
+		if my_morning_travel_time > mean(_peers collect (each.my_morning_travel_time)){
 			return 0.0;
 		}
 		else{
-			return self.my_travel_time/mean(_peers collect (each.my_travel_time));
+			return self.my_morning_travel_time/mean(_peers collect (each.my_morning_travel_time));
 		}
+return 0;
 	}
 
 
@@ -438,7 +441,6 @@ point the_target <- nil;
 		similarity_value<- calculate_similarity(i.my_peers);
 		float superiority_value;
 		superiority_value <- calculate_superiority(i.my_peers);
-		//my_need_social <- (similarity_value + superiority_value)/2;
 		return (similarity_value + superiority_value)/2;
 	}
 	
@@ -451,9 +453,10 @@ point the_target <- nil;
 	float calculate_personal_need_satisfaction(inhabitants i)
 	{
 
-		float relative_diff_to_current_peers_travel_mode <-i.value_mode_preferred - i.value_mode_actual = 0?0.0:(abs(i.value_mode_preferred-i.value_mode_actual)/3.0);
+		float relative_diff_to_current_peers_travel_mode <-i.value_mode_preferred - i.value_mode_actual = 0?0.0:(abs(i.value_mode_actual-i.value_mode_preferred)/3.0);
 		my_need_personal <- relative_diff_to_current_peers_travel_mode;
 		return relative_diff_to_current_peers_travel_mode;
+		
 		}
 
 
@@ -473,11 +476,13 @@ point the_target <- nil;
 		 avg_my_last_5_days_travel_time_mode_spefiic <- mean(i.mode_specific_memory[i.value_mode_actual]);
 		 // get last value in the list of mode specific travel time list 
 		 my_last_day_travel_time <- i.mode_specific_memory[i.value_mode_actual][cognitive_effort-1];
+		 
+		 
 		if my_last_day_travel_time <= avg_my_last_5_days_travel_time_mode_spefiic{
 			inhabitant_existence_need_satisfaction    <- 0.0;
 		} 
 				else {
-			inhabitant_existence_need_satisfaction     <- float(int(my_last_day_travel_time/avg_my_last_5_days_travel_time_mode_spefiic)); 
+			inhabitant_existence_need_satisfaction     <- ((my_last_day_travel_time/avg_my_last_5_days_travel_time_mode_spefiic)); 
 			//FIXME for now this is almost always 1, need to fix. 
 		}
 		
@@ -499,7 +504,7 @@ float calculate_overall_need_satisfaction {
 									 (inhabitant_relative_importance_personal_need * my_need_personal)+
 									 (inhabitant_relative_importance_social_need * my_need_social);
 									 
-									 return a;
+	return a;
 }
 
 action calculate_relative_overall_need_satisfaction {
@@ -529,17 +534,17 @@ action calculate_relative_overall_need_satisfaction {
 
  
 
- //function to assign initial memory of travel times
+ //function to assign initial memory of travel times - INITIAL TRAVEL TIMES ARE IN SECONDS
  action assign_initial_cognitive_memory{
 	
-  memory_bike_times <-list_with(cognitive_effort,distance_between(topology(world),[my_home, my_office])/rnd(mode_speed_string["bike"]+2,mode_speed_string["bike"]-2));
-  memory_walk_times <-list_with(cognitive_effort, distance_between(topology(world),[my_home, my_office])/rnd(mode_speed_string["walk"]+1,mode_speed_string["walk"]-1));
-  memory_pt_times <-list_with(cognitive_effort, distance_between(topology(world),[my_home, my_office])/rnd(mode_speed_string["pt"]+15,mode_speed_string["pt"]-15));
-  memory_car_times <-list_with(cognitive_effort,distance_between(topology(world),[my_home, my_office])/rnd(mode_speed_string["car"]+10,mode_speed_string["car"]-10));
+  memory_bike_times <-list_with(cognitive_effort,distance_between(topology(world),[my_home, my_office])/rnd(mode_speed_string["bike"]+0.2,mode_speed_string["bike"]-0.2));
+  memory_walk_times <-list_with(cognitive_effort, distance_between(topology(world),[my_home, my_office])/rnd(mode_speed_string["walk"]+0.1,mode_speed_string["walk"]-0.1));
+  memory_pt_times <-list_with(cognitive_effort, distance_between(topology(world),[my_home, my_office])/rnd(mode_speed_string["pt"]+0.3,mode_speed_string["pt"]-0.3));
+  memory_car_times <-list_with(cognitive_effort,distance_between(topology(world),[my_home, my_office])/rnd(mode_speed_string["car"]+2,mode_speed_string["car"]-2));
   
   
   mode_specific_memory <- [1::memory_bike_times, 2::memory_walk_times, 3::memory_pt_times, 4::memory_car_times];
-  //write mode_specific_memory;
+  //write mode_specific_memory[2]; //DEBUG STATEMENT
 }
  
 
@@ -772,20 +777,7 @@ action calculate_ratio_uncertainty_uncertainty_tolerance_level (string s){
 	}
  
 
-	list<int> get_morning_departure_time{
 	
-	int morning_hour <-int(gauss(8,0.5));
-	int morning_minute <- int(rnd(0,60));
-	return [morning_hour, morning_minute];
-	}
-
-
-	list<int> get_evening_departure_time{
-	
-	int evening_hour <-int(gauss(17,0.05));
-	int evening_minute <- int(rnd(0,60));
-	return [evening_hour, evening_minute];
-	}
 
 
 
@@ -795,7 +787,29 @@ init
 	//do select_peers;
 		
 		do assign_initial_cognitive_memory;
-		write "initial memory assigned for agent " +int(self);
+		my_morning_travel_time <-  one_of((mode_specific_memory[self.value_mode_actual]));
+		my_evening_travel_time <-  one_of((mode_specific_memory[self.value_mode_actual]));
+	   // write "initial memory assigned for all agents " +int(self);
+	   
+	   
+	   
+	   if current_date.day_of_week <6{ 
+		// inside if is weekday behavior
+		mhdt <- get_morning_departure_time();
+		write "mhdt"+ mhdt;
+		//mdt <-mdt[0]+(mdt[1]/60)*100;
+		eodt <- get_evening_departure_time();
+		
+	}
+	
+	else {
+		// inside else  is weekend behavior;
+		mhdt <- get_morning_departure_time();
+		write "mhdt"+ mhdt;
+		//mdt <-mdt[0]+(mdt[1]/60)*100;
+		eodt <- get_evening_departure_time();
+	}
+	   
 		
 	}
 
@@ -824,13 +838,33 @@ init
 
 
 
-	reflex every_day when:every(#day){
+
+	list<int> get_morning_departure_time{
+	
+	int morning_hour <-int(gauss(8,0.5));
+	int morning_minute <- int(rnd(0,59));
+	write morning_minute;
+	write morning_hour;
+	return [morning_hour, morning_minute];
+	}
+
+
+	list<int> get_evening_departure_time{
+	
+	int evening_hour <-int(gauss(17,0.05));
+	int evening_minute <- int(rnd(0,59));
+	return [evening_hour, evening_minute];
+	}
+
+
+	reflex every_day when: cycle >1 and every(#day){
 	
 	
 	
 	if current_date.day_of_week <6{ 
 		// inside if is weekday behavior
 		mhdt <- get_morning_departure_time();
+		write "mhdt"+ mhdt;
 		//mdt <-mdt[0]+(mdt[1]/60)*100;
 		eodt <- get_evening_departure_time();
 		
@@ -838,6 +872,10 @@ init
 	
 	else {
 		// inside else  is weekend behavior;
+		mhdt <- get_morning_departure_time();
+		write "mhdt"+ mhdt;
+		//mdt <-mdt[0]+(mdt[1]/60)*100;
+		eodt <- get_evening_departure_time();
 	}
 	
 	
@@ -864,7 +902,7 @@ init
 	}
 
 
-	reflex every_morning when:current_date.hour = mhdt[0] and current_date.minute = mhdt[1] and !(my_office covers location) and current_date.day_of_week <6
+	reflex every_morning when:cycle>1 and current_date.hour = mhdt[0] and current_date.minute = mhdt[1] and !(my_office covers location) and current_date.day_of_week <6
 	{
 		
 		my_morning_home_depart_time <-current_date;
@@ -878,16 +916,6 @@ init
 		do morning_movement;
 	}
 	
-	reflex every_evening when:current_date.hour = eodt[0] and current_date.minute = eodt[1] and !(my_home covers location) and current_date.day_of_week <6
-	{
-		objective <-"resting";
-		the_target <- any_location_in(my_home);
-	}
-	
-	reflex resting_behavior when:objective = "resting" and !(my_home covers location) {
-		do evening_movement;
-	}
-	
 	action morning_movement
 	{
 		float my_speed <- mode_speed_int[self.value_mode_actual] ;//# m / # sec;
@@ -897,6 +925,7 @@ init
 		{
 			my_morning_office_arrive_time <- current_date;
 			my_morning_travel_time <- my_morning_office_arrive_time - my_morning_home_depart_time;
+			write "my_morning_travel_time " + my_morning_travel_time/60;
 			do update_mode_specific_memory(my_morning_travel_time, self.value_mode_actual);
 			the_target <- nil;
 		}
@@ -904,23 +933,43 @@ init
 	}
 	
 	
-	action update_mode_specific_memory (float tt, int mode){
-		//morn_tt is morning_travel_time
-		add tt to:self.mode_specific_memory[mode];
-		remove index:0 from:self.mode_specific_memory[mode];
-		
+	reflex every_evening when:cycle>1 and current_date.hour = eodt[0] and current_date.minute = eodt[1] and !(my_home covers location) and current_date.day_of_week <6
+	{
+		my_evening_office_depart_time <- current_date;
+		objective <-"resting";
+		the_target <- any_location_in(my_home);
 	}
-
+	
+	reflex resting_behavior when:objective = "resting" and !(my_home covers location) {
+		do evening_movement;
+	}
+	
 	action evening_movement
 	{
 		float my_speed <- mode_speed_int[self.value_mode_actual] ;// # m / # sec;
 		do goto target: any_location_in(my_home) on: g speed: my_speed;
-		if the_target = location
+		if the_target = location or my_home covers self
 		{
 			my_evening_home_arrive_time <- current_date;
+			
+			my_evening_travel_time <- my_evening_home_arrive_time -  my_evening_office_depart_time ;
+			write "my_evening_travel_time " + my_evening_travel_time/60;
+			do update_mode_specific_memory(my_evening_travel_time, self.value_mode_actual);
+			the_target <- nil;
 		}
 
 	}
+	
+	action update_mode_specific_memory (float tt, int mode){
+		//morn_tt is morning_travel_time
+		write tt;
+		write self.mode_specific_memory[mode];
+		add tt to:self.mode_specific_memory[mode];
+		remove index:0 from:self.mode_specific_memory[mode];
+		write self.mode_specific_memory[mode];
+	}
+
+	
 
 
 
@@ -954,7 +1003,7 @@ init
 	
 	aspect colors{
 		if  my_office covers self.location{
-			draw circle(30) color:#blue;
+			draw circle(30) color:rgb(#blue,0.5);
 		} else if  my_home covers self.location{
 			draw circle(30) color:#yellow;
 		} else {
@@ -988,6 +1037,7 @@ experiment "Main Model" type: gui
 		monitor "walk" value: inhabitants count (each.value_mode_actual = 2) ;
 		monitor "pt" value: inhabitants count (each.value_mode_actual = 3) ;
 		monitor "car" value: inhabitants count (each.value_mode_actual = 4) ;
+		monitor "nummber of people at work  "  value: inhabitants count (each.my_office covers each.location);
 		display d type: java2D
 		{
 			species study_area aspect: a;
@@ -998,6 +1048,9 @@ experiment "Main Model" type: gui
 			
 			graphics "Info Text" refresh:true {
 				draw string(current_date, "dd-MM-yyyy HH:mm:ss")  at:{0,4000} color: # black font: font('Helvetica Neue', 32,   # italic) ;
+			
+				draw water color: # deepskyblue depth: 2;
+			
 				
 				}
 		}
@@ -1041,14 +1094,14 @@ experiment "Main Model" type: gui
 			
 		}
 		
-		display "travel time"{
-			chart "travel time" type:histogram{
-				data "car" value:mean((inhabitants where (each.my_mode_actual = "car")) collect (each.my_morning_travel_time))	 color:#blue style:spline thickness:3;
-				data "pt" value:mean((inhabitants where (each.my_mode_actual = "pt")) collect (each.my_morning_travel_time)) 	color:#red style:spline;
-				data "walk" value:mean((inhabitants where (each.my_mode_actual = "walk"))  collect (each.my_morning_travel_time))	color:#green style:spline;
-				data "bike" value:mean((inhabitants where (each.my_mode_actual = "bike"))  collect (each.my_morning_travel_time))	 color:#orange style:spline;
-			}
-		}
+//		display "travel time"{
+//			chart "travel time" type:histogram{
+//				data "car" value:mean((inhabitants where (each.my_mode_actual = "car")) collect (each.my_morning_travel_time))	 color:#blue style:spline thickness:3;
+//				data "pt" value:mean((inhabitants where (each.my_mode_actual = "pt")) collect (each.my_morning_travel_time)) 	color:#red style:spline;
+//				data "walk" value:mean((inhabitants where (each.my_mode_actual = "walk"))  collect (each.my_morning_travel_time))	color:#green style:spline;
+//				data "bike" value:mean((inhabitants where (each.my_mode_actual = "bike"))  collect (each.my_morning_travel_time))	 color:#orange style:spline;
+//			}
+//		}
 		
 		
 

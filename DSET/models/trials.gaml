@@ -22,6 +22,7 @@ global {
 		
 		
 		list<int> L1 <- [1,2,3];
+		write "=========>" + (1 between(0,2));
 		add 4 to: L1;
 		remove index:0 from:L1;
 		write "removed first and added last from L1 "+ L1;
