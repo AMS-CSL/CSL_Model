@@ -40,7 +40,7 @@ bool expected_linear <- true;
 	
 // THIS WILL BE THE GRAPH ON WHICH INHABITANTS WILL TRAVEL
 
-	graph g ;
+				graph g ;
 	
 // GLOBAL VARIABLES FOR NEEDS CALCULATION
 float inhabitant_relative_importance_existence_need <- 0.33;
@@ -72,12 +72,19 @@ list<int> work_bike_min <- [19,23];
 	
 	init
 	{
-		 g <- as_edge_graph(shape_file_streets);
+		
+		
 		if inverse_speed {
 		 mode_speed_int <- [1::1/4.1, 2::1/1.1, 3::1/8.3, 4::1/16.6];
 		}
 		create study_area from: shape_file_bounds;
+		
+		
 		create roads from: shape_file_streets;
+		map<roads,float> weights_map <- roads as_map (each:: (each.shape.perimeter));
+		g <- as_edge_graph(roads) with_weights weights_map;
+		
+		
 		create buildings from: shape_buildings
 		{
 		}
@@ -105,9 +112,14 @@ list<int> work_bike_min <- [19,23];
 		
 		
 	}
+	
+	reflex update_graph{
+		map<roads,float> weights_map <- roads as_map (each:: ( each.shape.perimeter));
+		g <- g with_weights weights_map;
+	}
 }
 
-species buildings
+species buildings schedules:[]
 {
 	string use;
 	rgb my_color;
@@ -213,7 +225,7 @@ point the_target <- nil;
 	// uncertainty variables
 	
 	map<string, float> my_uncertainty;
-	float inhabitant_uncertainty_ratio;
+	float inhabitant_uncertainty_uncertainty_tolerance_ratio;
 
 
 	// COGNITIVE MEMORY
@@ -426,7 +438,7 @@ point the_target <- nil;
 		else{
 			return self.my_morning_travel_time/mean(_peers collect (each.my_morning_travel_time));
 		}
-return 0;
+//return 0;
 	}
 
 
@@ -537,10 +549,10 @@ action calculate_relative_overall_need_satisfaction {
  //function to assign initial memory of travel times - INITIAL TRAVEL TIMES ARE IN SECONDS
  action assign_initial_cognitive_memory{
 	
-  memory_bike_times <-list_with(cognitive_effort,distance_between(topology(world),[my_home, my_office])/rnd(mode_speed_string["bike"]+0.2,mode_speed_string["bike"]-0.2));
-  memory_walk_times <-list_with(cognitive_effort, distance_between(topology(world),[my_home, my_office])/rnd(mode_speed_string["walk"]+0.1,mode_speed_string["walk"]-0.1));
-  memory_pt_times <-list_with(cognitive_effort, distance_between(topology(world),[my_home, my_office])/rnd(mode_speed_string["pt"]+0.3,mode_speed_string["pt"]-0.3));
-  memory_car_times <-list_with(cognitive_effort,distance_between(topology(world),[my_home, my_office])/rnd(mode_speed_string["car"]+2,mode_speed_string["car"]-2));
+  memory_bike_times <-list_with(cognitive_effort,distance_between(topology(g),[my_home, my_office])/rnd(mode_speed_string["bike"]+0.2,mode_speed_string["bike"]-0.2));
+  memory_walk_times <-list_with(cognitive_effort, distance_between(topology(g),[my_home, my_office])/rnd(mode_speed_string["walk"]+0.1,mode_speed_string["walk"]-0.1));
+  memory_pt_times <-list_with(cognitive_effort, distance_between(topology(g),[my_home, my_office])/rnd(mode_speed_string["pt"]+0.3,mode_speed_string["pt"]-0.3));
+  memory_car_times <-list_with(cognitive_effort,distance_between(topology(g),[my_home, my_office])/rnd(mode_speed_string["car"]+2,mode_speed_string["car"]-2));
   
   
   mode_specific_memory <- [1::memory_bike_times, 2::memory_walk_times, 3::memory_pt_times, 4::memory_car_times];
@@ -552,40 +564,67 @@ action calculate_relative_overall_need_satisfaction {
 
 
 //function to get uncertainty factor for travel times for all modes, argument = self
+//map get_uncertainty_travel_time_for_all_modes (inhabitants i){
+//	map<string, float> my_uncertainty_cov;
+//	
+//	list<float> peers_and_self_travel_time_bike <-i.my_peers accumulate (each.my_expected_travel_time_all_modes["bike"]);
+//	add i.my_expected_travel_time_all_modes["bike"] to:peers_and_self_travel_time_bike;
+//	my_uncertainty_cov["bike"]<-standard_deviation(peers_and_self_travel_time_bike)/mean(peers_and_self_travel_time_bike);
+//	
+//	list<float> peers_and_self_travel_time_walk <-i.my_peers accumulate (each.my_expected_travel_time_all_modes["bike"]);
+//	add i.my_expected_travel_time_all_modes["bike"] to:peers_and_self_travel_time_walk;
+//	my_uncertainty_cov["walk"]<-standard_deviation(peers_and_self_travel_time_walk)/mean(peers_and_self_travel_time_walk);
+//	
+//	list<float> peers_and_self_travel_time_pt <-i.my_peers accumulate (each.my_expected_travel_time_all_modes["bike"]);
+//	add i.my_expected_travel_time_all_modes["bike"] to:peers_and_self_travel_time_pt;
+//	my_uncertainty_cov["pt"]<-standard_deviation(peers_and_self_travel_time_pt)/mean(peers_and_self_travel_time_pt);
+//	
+//	list<float> peers_and_self_travel_time_car <-i.my_peers accumulate (each.my_expected_travel_time_all_modes["bike"]);
+//	add i.my_expected_travel_time_all_modes["bike"] to:peers_and_self_travel_time_car;
+//	my_uncertainty_cov["car"]<-standard_deviation(peers_and_self_travel_time_car)/mean(peers_and_self_travel_time_car);
+//	
+//	return my_uncertainty_cov; //send this to my_uncertainty
+//}
+ 
+ //function to get uncertainty factor for travel times for all modes, argument = self
 map get_uncertainty_travel_time_for_all_modes (inhabitants i){
-	map<string, float> my_uncertainty_cov;
+	map<int, float> my_uncertainty_cov;
 	
-	list<float> peers_and_self_travel_time_bike <-i.my_peers accumulate (each.my_expected_travel_time_all_modes["bike"]);
-	add i.my_expected_travel_time_all_modes["bike"] to:peers_and_self_travel_time_bike;
-	my_uncertainty_cov["bike"]<-standard_deviation(peers_and_self_travel_time_bike)/mean(peers_and_self_travel_time_bike);
+	list<inhabitants> i_and_my_peers <- i.my_peers + i; 
 	
-	list<float> peers_and_self_travel_time_walk <-i.my_peers accumulate (each.my_expected_travel_time_all_modes["bike"]);
-	add i.my_expected_travel_time_all_modes["bike"] to:peers_and_self_travel_time_walk;
-	my_uncertainty_cov["walk"]<-standard_deviation(peers_and_self_travel_time_walk)/mean(peers_and_self_travel_time_walk);
+	list<list<float>> store_expected_TT;
+	// get linear forecast for expected travel time for each mode for agent and its peers
+	loop a over:i_and_my_peers{
+		float expected_TT_1 <- world.get_linear_forecast(a.mode_specific_memory[1], 1);
+		float expected_TT_2 <- world.get_linear_forecast(a.mode_specific_memory[2], 2);
+		float expected_TT_3 <- world.get_linear_forecast(a.mode_specific_memory[3], 3);
+		float expected_TT_4 <- world.get_linear_forecast(a.mode_specific_memory[4], 4);
+		add [expected_TT_1,expected_TT_2,expected_TT_3,expected_TT_4] to: store_expected_TT;
+	}
 	
-	list<float> peers_and_self_travel_time_pt <-i.my_peers accumulate (each.my_expected_travel_time_all_modes["bike"]);
-	add i.my_expected_travel_time_all_modes["bike"] to:peers_and_self_travel_time_pt;
-	my_uncertainty_cov["pt"]<-standard_deviation(peers_and_self_travel_time_pt)/mean(peers_and_self_travel_time_pt);
+	float cov_expected_TT_1 <- standard_deviation(store_expected_TT accumulate (each)[0])/mean(store_expected_TT accumulate (each)[0]); //mode 1
+	float cov_expected_TT_2 <- standard_deviation(store_expected_TT accumulate (each)[1])/mean(store_expected_TT accumulate (each)[1]); // mode 2
+	float cov_expected_TT_3 <- standard_deviation(store_expected_TT accumulate (each)[2])/mean(store_expected_TT accumulate (each)[2]); // mode 3
+	float cov_expected_TT_4 <-standard_deviation(store_expected_TT accumulate (each)[3])/ mean(store_expected_TT accumulate (each)[3]); // mode 4
 	
-	list<float> peers_and_self_travel_time_car <-i.my_peers accumulate (each.my_expected_travel_time_all_modes["bike"]);
-	add i.my_expected_travel_time_all_modes["bike"] to:peers_and_self_travel_time_car;
-	my_uncertainty_cov["car"]<-standard_deviation(peers_and_self_travel_time_car)/mean(peers_and_self_travel_time_car);
+	
+	my_uncertainty_cov <-[1::cov_expected_TT_1,2::cov_expected_TT_2,3::cov_expected_TT_3,4::cov_expected_TT_4];
 	
 	return my_uncertainty_cov; //send this to my_uncertainty
 }
- 
- 
+
+
 
  
- 
+//TODO I think the mistake is coming from here, this result is not going as input to behavior model 
 // for this function, you need to send an argument in string , which in this case is coming from my_uncertainty
 action calculate_ratio_uncertainty_uncertainty_tolerance_level (string s){
 	if (my_uncertainty[s] > uncertainty_tolerance_level)
 	{
-		inhabitant_uncertainty_ratio <- 0.75;
+		inhabitant_uncertainty_uncertainty_tolerance_ratio <- 0.75;
 	} 
 	else {
-		inhabitant_uncertainty_ratio <-0.25;
+		inhabitant_uncertainty_uncertainty_tolerance_ratio <-0.25;
 	}
 }
 
@@ -616,6 +655,8 @@ action calculate_ratio_uncertainty_uncertainty_tolerance_level (string s){
 		map<int, list<int>> m <- group_by(peer_modes, (each));
 		list<int> counts <- m.values accumulate length(each);
 		mode <- m.keys at (counts index_of max(counts)); //get the most used mode.
+		write m;
+		write mode;
 		return mode;
 	}
 	
@@ -715,12 +756,14 @@ action calculate_ratio_uncertainty_uncertainty_tolerance_level (string s){
 	}
 	
 	
+	
+	
 
 	float sub_potential_EXISTENCE_need_satisfaction(inhabitants i, int mode){
 		//inhabitant_expected_relative_travel_speed_travel_mode[mode]<- get_linear_forecast(i.mode_specific_memory[mode], mode);
 		//write "i entered sub existence need " + i +" with mode "+mode;
 		if expected_linear{
-			inhabitant_expected_relative_travel_speed_travel_mode[mode-1]<- get_linear_forecast(i.mode_specific_memory[mode], mode);
+			inhabitant_expected_relative_travel_speed_travel_mode[mode-1]<- world.get_linear_forecast(i.mode_specific_memory[mode], mode);
 		} 
 		else{
 			inhabitant_expected_relative_travel_speed_travel_mode[mode-1]<- get_new_expected_value(i.mode_specific_memory[mode], mode);
@@ -746,25 +789,7 @@ action calculate_ratio_uncertainty_uncertainty_tolerance_level (string s){
 		return inhabitants_potential_overall_need_satisfaction;
 	}
 
-	float get_linear_forecast(list<float> f, int mode_number){
-		
-		matrix<float> data_matrix <- 0.0 as_matrix {2,length(f)};
-		loop i from: 0 to: length(f) -1 {
-			
-			data_matrix[1,i] <- i;
-			
-			data_matrix[0,i] <- f[i];
-		}
-		//write data_matrix;
-		if mode_number = ""{
-			warn "No mode defined in call to linear forecast";
-		}
-		regression my_regression_model  <- build(data_matrix);
-		//write my_regression_model;
-		float my_prediction <-  predict(my_regression_model, [length(f)]);
-		//write "i am inhabitant"+ int(self)+ " using mode " + string(mode_number) + "_ " + my_prediction;
-		return my_prediction;
-	}
+	
 	
 	
 	
@@ -857,7 +882,7 @@ init
 	}
 
 
-	reflex every_day when: cycle >1 and every(#day){
+	reflex every_day when: cycle >1 and every(3 #day){
 	
 	
 	
@@ -891,9 +916,10 @@ init
 		
 		//UNCERTAINTY
 		
-		
+		//FIXME check uncertainty_tolerance_level_ratio it does not look right
 		// BEHAVIOR
-		 behavior <- world.choose_behavior(overall_need_satisfaction_aspiration_level_ratio,uncertainty_tolerance_level_ratio);
+		 behavior <- world.choose_behavior(inhabitant_overall_need_satisfaction_aspiration_level_ratio,uncertainty_tolerance_level_ratio);
+		 // behavior <- world.choose_behavior(rnd(1.0),rnd(1.0));
 		//write "behavior = " + behavior;
 		do execute_a_behavior(behavior);
 		
