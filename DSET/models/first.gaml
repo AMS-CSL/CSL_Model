@@ -15,10 +15,12 @@ global
 	
 	
 	
-date starting_date <- date("2018-05-07 00:00:01");
+date starting_date <- date("2018-05-07 00:00:00");
 float step <-1 #mn;
 bool inverse_speed <-false;
 bool expected_linear <- true;
+float uncertainty_constant_1 <- 0.5;
+float uncertainty_constant_2 <- 0.5;
 
 
 
@@ -33,7 +35,7 @@ bool expected_linear <- true;
 	float proportion_of_offices <- 0.1;
 	float distance_between_homes <- 2000.0;
 	float relative_work_work_distance <- 3000.0;
-	int inhabitant_population <- 10;
+	int inhabitant_population <- 50;
 //TODO check if this below  should be global or agent specific
 	float max_travel_mode_difference <-3.0;
 	
@@ -224,7 +226,7 @@ point the_target <- nil;
    
 	// uncertainty variables
 	
-	map<string, float> my_uncertainty;
+	map<int, float> my_uncertainty;
 	float inhabitant_uncertainty_uncertainty_tolerance_ratio;
 
 
@@ -602,10 +604,14 @@ map get_uncertainty_travel_time_for_all_modes (inhabitants i){
 		add [expected_TT_1,expected_TT_2,expected_TT_3,expected_TT_4] to: store_expected_TT;
 	}
 	
-	float cov_expected_TT_1 <- standard_deviation(store_expected_TT accumulate (each)[0])/mean(store_expected_TT accumulate (each)[0]); //mode 1
-	float cov_expected_TT_2 <- standard_deviation(store_expected_TT accumulate (each)[1])/mean(store_expected_TT accumulate (each)[1]); // mode 2
-	float cov_expected_TT_3 <- standard_deviation(store_expected_TT accumulate (each)[2])/mean(store_expected_TT accumulate (each)[2]); // mode 3
-	float cov_expected_TT_4 <-standard_deviation(store_expected_TT accumulate (each)[3])/ mean(store_expected_TT accumulate (each)[3]); // mode 4
+	float cov_expected_TT_1 <-  standard_deviation(store_expected_TT accumulate (each)[0])/mean(store_expected_TT accumulate (each)[0]) 
+									* uncertainty_constant_1 + uncertainty_constant_2 * (1-calculate_similarity(i.my_peers)) ; //mode 1
+	float cov_expected_TT_2 <- standard_deviation(store_expected_TT accumulate (each)[1])/mean(store_expected_TT accumulate (each)[1]) 
+									* uncertainty_constant_1 + uncertainty_constant_2 * (1-calculate_similarity(i.my_peers)) ; 	 // mode 2
+	float cov_expected_TT_3 <- standard_deviation(store_expected_TT accumulate (each)[2])/mean(store_expected_TT accumulate (each)[2])
+									* uncertainty_constant_1 + uncertainty_constant_2 * (1-calculate_similarity(i.my_peers)) ; // mode 3
+	float cov_expected_TT_4 <-standard_deviation(store_expected_TT accumulate (each)[3])/ mean(store_expected_TT accumulate (each)[3])
+									* uncertainty_constant_1 + uncertainty_constant_2 * (1-calculate_similarity(i.my_peers)) ; // mode 4
 	
 	
 	my_uncertainty_cov <-[1::cov_expected_TT_1,2::cov_expected_TT_2,3::cov_expected_TT_3,4::cov_expected_TT_4];
@@ -618,7 +624,7 @@ map get_uncertainty_travel_time_for_all_modes (inhabitants i){
  
 //TODO I think the mistake is coming from here, this result is not going as input to behavior model 
 // for this function, you need to send an argument in string , which in this case is coming from my_uncertainty
-action calculate_ratio_uncertainty_uncertainty_tolerance_level (string s){
+action calculate_ratio_uncertainty_uncertainty_tolerance_level (int s){
 	if (my_uncertainty[s] > uncertainty_tolerance_level)
 	{
 		inhabitant_uncertainty_uncertainty_tolerance_ratio <- 0.75;
@@ -639,7 +645,8 @@ action calculate_ratio_uncertainty_uncertainty_tolerance_level (string s){
 
 // ATTRIBUTES FOR BEHAVIOR STRATEGY
 	float overall_need_satisfaction_aspiration_level_ratio;
-	float uncertainty_tolerance_level_ratio;
+// FIXME check uncertainty_tolerance_level_ratio with erika, should it be a random number between 0 and 1
+	float uncertainty_tolerance_level_ratio <- rnd(1.0);
 	string my_behavior;
 	
 	list<float> my_optimize_all_mode;
@@ -876,13 +883,13 @@ init
 
 	list<int> get_evening_departure_time{
 	
-	int evening_hour <-int(gauss(17,0.05));
+	int evening_hour <-int(gauss(17,0.5));
 	int evening_minute <- int(rnd(0,59));
 	return [evening_hour, evening_minute];
 	}
 
 
-	reflex every_day when: cycle >1 and every(3 #day){
+	reflex every_day when:  cycle > 1 and every(5 #day){
 	
 	
 	
@@ -918,7 +925,7 @@ init
 		
 		//FIXME check uncertainty_tolerance_level_ratio it does not look right
 		// BEHAVIOR
-		 behavior <- world.choose_behavior(inhabitant_overall_need_satisfaction_aspiration_level_ratio,uncertainty_tolerance_level_ratio);
+		 behavior <- world.choose_behavior(inhabitant_overall_need_satisfaction_aspiration_level_ratio,inhabitant_uncertainty_uncertainty_tolerance_ratio);//inhabitant_uncertainty_uncertainty_tolerance_ratio
 		 // behavior <- world.choose_behavior(rnd(1.0),rnd(1.0));
 		//write "behavior = " + behavior;
 		do execute_a_behavior(behavior);
