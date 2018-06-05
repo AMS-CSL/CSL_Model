@@ -105,7 +105,7 @@ list<int> work_bike_min <- [19,23];
 
 		create inhabitants number: inhabitant_population{
 			 location <- my_home.location;
-			 my_morning_office_distance <- distance_between(topology(g),[my_home, my_office]);
+			// my_morning_office_distance <- distance_between(topology(g),[my_home, my_office]);
 		}
 		
 		
@@ -194,9 +194,9 @@ point the_target <- nil;
 	
 	
 //FIXME  these two below need to change to network characteristics, when we have a clean network
-	float my_travel_distance <- rnd(1.0,10.0);
+	//float my_travel_distance <- rnd(1.0,10.0);
 	float my_travel_time ;//<- my_travel_distance / mode_speed_string[my_mode_actual];
-	float my_morning_office_distance;
+	//float my_morning_office_distance;
 	
 	
 	
@@ -427,17 +427,19 @@ point the_target <- nil;
 	}
 			
 //------------------------------------------------------------ 2B CALCULATE SUPERIORITY ----------------------------------------------------------
-//TODO does an agent compare his mode travel time with peers of any mode or just own mode? Ask Erika
+//TODO does an agent compare his mode travel time with peers of any mode or just own mode? Ask Erika CHANGED if statement from grreater to less 
 
 	float calculate_superiority(list<inhabitants> _peers)
 	{
 
 		list<float> difference_with_my_peers <- _peers collect (each.my_morning_travel_time - self.my_morning_travel_time);
+		write "difference_with_my_peers " + difference_with_my_peers;
 		//write difference_with_my_peers;
-		if my_morning_travel_time > mean(_peers collect (each.my_morning_travel_time)){
+		if my_morning_travel_time < mean(_peers collect (each.my_morning_travel_time)){
 			return 0.0;
 		}
 		else{
+			write sample(self.my_morning_travel_time/mean(_peers collect (each.my_morning_travel_time)));
 			return self.my_morning_travel_time/mean(_peers collect (each.my_morning_travel_time));
 		}
 //return 0;
@@ -505,6 +507,36 @@ point the_target <- nil;
 
 
 
+// FIXME currently, this function  get_distance_to_workconsiders distance between home and office and not the agents travel path distance, needs to be modified once the model is working properly
+float get_distance_to_work(inhabitants i){
+	float d;
+	
+	d <-  distance_between(topology(g),[my_home, my_office]);// is in meters
+		
+	return d;
+}
+
+float calculate_existence_need_satisfaction_modified (inhabitants i)
+	{
+		//write "inside existence \t"+ i.memory_all_modes;
+		 //avg_my_last_5_days_travel_time_mode_spefiic <- mean(i.mode_specific_memory[i.value_mode_actual]);
+		 // get last value in the list of mode specific travel time list 
+		 my_last_day_travel_time <- i.mode_specific_memory[i.value_mode_actual][cognitive_effort-1];
+		 float d <- get_distance_to_work(i);
+		 float speed_of_last_trip <- d/(my_last_day_travel_time);//distance divided by time m/s 
+		 
+		 
+		if speed_of_last_trip >= mode_speed_int[i.value_mode_actual]{
+			inhabitant_existence_need_satisfaction    <- 0.0;
+		} 
+				else {
+			inhabitant_existence_need_satisfaction     <-speed_of_last_trip / mode_speed_int[i.value_mode_actual]; 
+			
+		}
+		
+		return inhabitant_existence_need_satisfaction;
+	}
+
 
 //----------------------------------------------------------------------------------------------------------------------------------------------------------------------------//
 //																																     //
@@ -550,12 +582,19 @@ action calculate_relative_overall_need_satisfaction {
 
  //function to assign initial memory of travel times - INITIAL TRAVEL TIMES ARE IN SECONDS
  action assign_initial_cognitive_memory{
+ 	
+ 	loop i from: 0 to:cognitive_effort{
+ 		add (2*60 + rnd(2*60)) + distance_between(topology(g),[my_home, my_office])/rnd(mode_speed_string["bike"]+0.2,mode_speed_string["bike"]-0.2) to: memory_bike_times; //bike times get min 2 minutes for parking (2*60) for parking
+ 		add distance_between(topology(g),[my_home, my_office])/rnd(mode_speed_string["walk"]+0.1,mode_speed_string["walk"]-0.1) to: memory_walk_times;
+ 		add (10*60 + rnd(10*60)) + distance_between(topology(g),[my_home, my_office])/rnd(mode_speed_string["pt"]+0.3,mode_speed_string["pt"]-0.3) to: memory_pt_times; //bus gets min 10 minutes waiting time ;
+ 		add (5*60 + rnd(5*60)) + distance_between(topology(g),[my_home, my_office])/rnd(mode_speed_string["car"]+2,mode_speed_string["car"]-2) to:memory_car_times; //car times get min 5 minutes (5*60) for parking times
+ 	}
 	
-  memory_bike_times <-list_with(cognitive_effort,distance_between(topology(g),[my_home, my_office])/rnd(mode_speed_string["bike"]+0.2,mode_speed_string["bike"]-0.2));
-  memory_walk_times <-list_with(cognitive_effort, distance_between(topology(g),[my_home, my_office])/rnd(mode_speed_string["walk"]+0.1,mode_speed_string["walk"]-0.1));
-  memory_pt_times <-list_with(cognitive_effort, distance_between(topology(g),[my_home, my_office])/rnd(mode_speed_string["pt"]+0.3,mode_speed_string["pt"]-0.3));
-  memory_car_times <-list_with(cognitive_effort,distance_between(topology(g),[my_home, my_office])/rnd(mode_speed_string["car"]+2,mode_speed_string["car"]-2));
-  
+//  memory_bike_times <-list_with(cognitive_effort,distance_between(topology(g),[my_home, my_office])/rnd(mode_speed_string["bike"]+0.2,mode_speed_string["bike"]-0.2));
+//  memory_walk_times <-list_with(cognitive_effort, distance_between(topology(g),[my_home, my_office])/rnd(mode_speed_string["walk"]+0.1,mode_speed_string["walk"]-0.1));
+//  memory_pt_times <-list_with(cognitive_effort, distance_between(topology(g),[my_home, my_office])/rnd(mode_speed_string["pt"]+0.3,mode_speed_string["pt"]-0.3));
+//  memory_car_times <-list_with(cognitive_effort,distance_between(topology(g),[my_home, my_office])/rnd(mode_speed_string["car"]+2,mode_speed_string["car"]-2));
+//  
   
   mode_specific_memory <- [1::memory_bike_times, 2::memory_walk_times, 3::memory_pt_times, 4::memory_car_times];
   //write mode_specific_memory[2]; //DEBUG STATEMENT
@@ -769,19 +808,24 @@ action calculate_ratio_uncertainty_uncertainty_tolerance_level (int s){
 	float sub_potential_EXISTENCE_need_satisfaction(inhabitants i, int mode){
 		//inhabitant_expected_relative_travel_speed_travel_mode[mode]<- get_linear_forecast(i.mode_specific_memory[mode], mode);
 		//write "i entered sub existence need " + i +" with mode "+mode;
+		float my_expected_speed;
 		if expected_linear{
+			float travel_distance_in_m <-  get_distance_to_work(i);
 			inhabitant_expected_relative_travel_speed_travel_mode[mode-1]<- world.get_linear_forecast(i.mode_specific_memory[mode], mode);
+			 my_expected_speed <- travel_distance_in_m/inhabitant_expected_relative_travel_speed_travel_mode[mode-1];
+			
 		} 
-		else{
-			inhabitant_expected_relative_travel_speed_travel_mode[mode-1]<- get_new_expected_value(i.mode_specific_memory[mode], mode);
-		}
+//		else{
+//			inhabitant_expected_relative_travel_speed_travel_mode[mode-1]<- get_new_expected_value(i.mode_specific_memory[mode], mode);
+//		}
 		
 		//write "prediction --->" + inhabitant_expected_relative_travel_speed_travel_mode[mode-1];
-		if inhabitant_expected_relative_travel_speed_travel_mode[mode-1] <= avg_my_last_5_days_travel_time_mode_spefiic{
-			inhabitant_potential_existence_need_satisfaction <-0.0;
-		}
-		else {
-			inhabitant_potential_existence_need_satisfaction <- inhabitant_expected_relative_travel_speed_travel_mode[mode-1]/mode_speed_int[mode];
+		if my_expected_speed >= mode_speed_int[i.value_mode_actual]{
+			inhabitant_potential_existence_need_satisfaction    <- 0.0;
+		} 
+				else {
+			inhabitant_potential_existence_need_satisfaction     <-my_expected_speed / mode_speed_int[i.value_mode_actual]; 
+			
 		}
 		
 		return inhabitant_potential_existence_need_satisfaction;
@@ -828,16 +872,16 @@ init
 	   if current_date.day_of_week <6{ 
 		// inside if is weekday behavior
 		mhdt <- get_morning_departure_time();
-		write "mhdt"+ mhdt;
+		//write "mhdt"+ mhdt;
 		//mdt <-mdt[0]+(mdt[1]/60)*100;
 		eodt <- get_evening_departure_time();
-		
+		//write "eodt" + eodt;
 	}
 	
 	else {
 		// inside else  is weekend behavior;
 		mhdt <- get_morning_departure_time();
-		write "mhdt"+ mhdt;
+		//write "mhdt"+ mhdt;
 		//mdt <-mdt[0]+(mdt[1]/60)*100;
 		eodt <- get_evening_departure_time();
 	}
@@ -873,41 +917,43 @@ init
 
 	list<int> get_morning_departure_time{
 	
-	int morning_hour <-int(gauss(8,0.5));
+	int morning_hour <-  round(gauss(8,0.5));
 	int morning_minute <- int(rnd(0,59));
-	write morning_minute;
-	write morning_hour;
+	//write morning_minute;
+	//write morning_hour;
 	return [morning_hour, morning_minute];
 	}
 
 
 	list<int> get_evening_departure_time{
 	
-	int evening_hour <-int(gauss(17,0.5));
+	int evening_hour <-round(gauss(17,0.5));
 	int evening_minute <- int(rnd(0,59));
 	return [evening_hour, evening_minute];
 	}
 
 
-	reflex every_day when:  cycle > 1 and every(5 #day){
+	reflex every_day when:  cycle > 1 and every(1 #day){
 	
 	
 	
 	if current_date.day_of_week <6{ 
 		// inside if is weekday behavior
 		mhdt <- get_morning_departure_time();
-		write "mhdt"+ mhdt;
+		//write "mhdt"+ mhdt;
 		//mdt <-mdt[0]+(mdt[1]/60)*100;
 		eodt <- get_evening_departure_time();
+		//write "eodt" + eodt;
 		
 	}
 	
 	else {
 		// inside else  is weekend behavior;
 		mhdt <- get_morning_departure_time();
-		write "mhdt"+ mhdt;
+		//write "mhdt"+ mhdt;
 		//mdt <-mdt[0]+(mdt[1]/60)*100;
 		eodt <- get_evening_departure_time();
+		//write "eodt" + eodt;
 	}
 	
 	
@@ -918,7 +964,8 @@ init
 		//NEED CALCULATIONS
 		my_need_social <- calculate_social_need_satisfaction(self) ;
 		my_need_personal <- calculate_personal_need_satisfaction(self);
-		my_need_existence <- calculate_existence_need_satisfaction(self);
+		my_need_existence <- calculate_existence_need_satisfaction_modified(self);
+		write ">>>>>>>>>>>>  " + my_need_existence + "  <<<<<<";
 		my_overall_needs_satisfaction <- calculate_overall_need_satisfaction();
 		
 		//UNCERTAINTY
@@ -958,7 +1005,29 @@ init
 		{
 			my_morning_office_arrive_time <- current_date;
 			my_morning_travel_time <- my_morning_office_arrive_time - my_morning_home_depart_time;
-			write "my_morning_travel_time " + my_morning_travel_time/60;
+			write "my_morning_travel_time " + my_morning_travel_time + " on mode " + self.my_mode_actual + " for distance "  + distance_between(topology(g), [self.my_office, self.my_home]);
+			
+			switch value_mode_actual{
+				match 1 {
+					
+					// for bike add minimum 2 minute parking time
+					my_morning_travel_time <- my_morning_travel_time + (2*60 + rnd(2*60)); //all in seconds
+					
+				}
+				
+				match 3{
+					// for pt add minimum 10 minute random time
+					my_morning_travel_time <- my_morning_travel_time + (10*60 + rnd(10*60)); //all in seconds
+				}
+				
+				match 4 {
+					
+					// for car add minimum  5 minute random time
+					my_morning_travel_time <- my_morning_travel_time + (5*60 + rnd(5*60)); //all in seconds
+				}
+			}
+			
+			write "my_morning_travel_time 2 " + my_morning_travel_time + " on mode " + self.my_mode_actual + " for distance "  + distance_between(topology(g), [self.my_office, self.my_home]);
 			do update_mode_specific_memory(my_morning_travel_time, self.value_mode_actual);
 			the_target <- nil;
 		}
@@ -973,7 +1042,9 @@ init
 		the_target <- any_location_in(my_home);
 	}
 	
-	reflex resting_behavior when:objective = "resting" and !(my_home covers location) {
+	
+	// this fix on line below ( current_date.hour looks unneccessary but without it gama throws error. This is a quick fix and not a good logic
+	reflex resting_behavior when:objective = "resting" and !(my_home covers location) and current_date.hour > 16 {
 		do evening_movement;
 	}
 	
@@ -986,7 +1057,31 @@ init
 			my_evening_home_arrive_time <- current_date;
 			
 			my_evening_travel_time <- my_evening_home_arrive_time -  my_evening_office_depart_time ;
-			write "my_evening_travel_time " + my_evening_travel_time/60;
+			
+			write "my_evening_travel_time " + my_evening_travel_time  + " on mode " + self.my_mode_actual + " for distance "  + distance_between(topology(g), [self.my_office, self.my_home]);
+			
+			//mode and their numbers <- ["bike"::1, "walk"::2, "pt"::3, "car"::4]; // integer identifier for mode
+			switch value_mode_actual{
+				match 1 {
+					
+					// for bike add minimum 2 minute parking time
+					my_evening_travel_time <- my_evening_travel_time + (2*60 + rnd(2*60)); //all in seconds
+					
+				}
+				
+				match 3{
+					// for pt add minimum 10 minute random time
+					my_evening_travel_time <- my_evening_travel_time + (10*60 + rnd(10*60)); //all in seconds
+				}
+				
+				match 4 {
+					
+					// for car add minimum  5 minute random time
+					my_evening_travel_time <- my_evening_travel_time + (5*60 + rnd(5*60)); //all in seconds
+				}
+			}
+			
+			write "my_evening_travel_time 2 " + my_evening_travel_time  + " on mode " + self.my_mode_actual + " for distance "  + distance_between(topology(g), [self.my_office, self.my_home]);
 			do update_mode_specific_memory(my_evening_travel_time, self.value_mode_actual);
 			the_target <- nil;
 		}
