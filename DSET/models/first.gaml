@@ -83,7 +83,7 @@ list<int> work_bike_min <- [19,23];
 		
 		
 		create roads from: shape_file_streets;
-		map<roads,float> weights_map <- roads as_map (each:: (each.shape.perimeter));
+		map<roads,float> weights_map <- roads as_map (each:: (each.shape.perimeter * (1+ rnd(1))));
 		g <- as_edge_graph(roads) with_weights weights_map;
 		
 		
@@ -157,6 +157,8 @@ species buildings schedules:[]
 
 species roads
 {
+	float speed_limit_on_street <- 35.0 #km / #hour;
+	
 	init
 	{
 	}
@@ -433,13 +435,13 @@ point the_target <- nil;
 	{
 
 		list<float> difference_with_my_peers <- _peers collect (each.my_morning_travel_time - self.my_morning_travel_time);
-		write "difference_with_my_peers " + difference_with_my_peers;
+		//write "difference_with_my_peers " + difference_with_my_peers;
 		//write difference_with_my_peers;
 		if my_morning_travel_time < mean(_peers collect (each.my_morning_travel_time)){
 			return 0.0;
 		}
 		else{
-			write sample(self.my_morning_travel_time/mean(_peers collect (each.my_morning_travel_time)));
+			//write sample(self.my_morning_travel_time/mean(_peers collect (each.my_morning_travel_time)));
 			return self.my_morning_travel_time/mean(_peers collect (each.my_morning_travel_time));
 		}
 //return 0;
@@ -701,8 +703,8 @@ action calculate_ratio_uncertainty_uncertainty_tolerance_level (int s){
 		map<int, list<int>> m <- group_by(peer_modes, (each));
 		list<int> counts <- m.values accumulate length(each);
 		mode <- m.keys at (counts index_of max(counts)); //get the most used mode.
-		write m;
-		write mode;
+		//write m;
+		//write mode;
 		return mode;
 	}
 	
@@ -800,7 +802,7 @@ action calculate_ratio_uncertainty_uncertainty_tolerance_level (int s){
 		inhabitant_potential_social_need_satisfaction_travel <- (potential_similarity_with_travel_mode + i.superior_to_peers_ratio)/2.0;
 		return inhabitant_potential_social_need_satisfaction_travel;
 	}
-	
+		
 	
 	
 	
@@ -999,7 +1001,7 @@ init
 	action morning_movement
 	{
 		float my_speed <- mode_speed_int[self.value_mode_actual] ;//# m / # sec;
-		do goto target: the_target on: g speed: my_speed;
+		do goto target: the_target on: g speed: min([my_speed,(roads closest_to self).speed_limit_on_street]); 
 		
 		if (the_target = location) or (my_office covers self)
 		{
@@ -1051,7 +1053,7 @@ init
 	action evening_movement
 	{
 		float my_speed <- mode_speed_int[self.value_mode_actual] ;// # m / # sec;
-		do goto target: any_location_in(my_home) on: g speed: my_speed;
+		do goto target: any_location_in(my_home) on: g speed: min([my_speed,(roads closest_to self).speed_limit_on_street]);
 		if the_target = location or my_home covers self
 		{
 			my_evening_home_arrive_time <- current_date;
@@ -1138,6 +1140,11 @@ init
 			draw circle(30) color:#lime;
 		}
 	}
+	
+	aspect consumat {
+		
+	draw circle(1) color:#black at:{inhabitant_overall_need_satisfaction_aspiration_level_ratio *10,inhabitant_uncertainty_uncertainty_tolerance_ratio *10};
+	}
 
 }
 
@@ -1197,13 +1204,16 @@ experiment "Main Model" type: gui
 		
 		display "modal share" type:java2D refresh: every(1#day) {
 			chart "mode share" type:series 
-			//style:spline
+			style:spline
 			//y_range:{0,1000}
+			 x_serie_labels: current_date.date
+			 series_label_position: onchart
 			{
-				data "bike" value:length(list(inhabitants) where (each.value_mode_actual = 1)) color:#blue  thickness:2 marker:false;
-				data "walk" value:length(list(inhabitants) where (each.value_mode_actual = 2)) color:#red  thickness:2 marker:false;
+				data "bike" value:length(list(inhabitants) where (each.value_mode_actual = 1)) color:#blue  thickness:2 marker:true;
+				data "walk" value:length(list(inhabitants) where (each.value_mode_actual = 2)) color:#red  thickness:2 marker:true;
 				data "pt" value:length(list(inhabitants) where (each.value_mode_actual = 3)) color:#green  thickness:2 marker:false;
 				data "car" value:length(list(inhabitants) where (each.value_mode_actual = 4)) color:#maroon  thickness:2 marker:false;
+				data "" value:length(list(inhabitants) where (each.value_mode_actual = 1)) color:rgb(#blue,0.12)  thickness:27 marker:true;
 			}
 			
 		}
@@ -1214,13 +1224,18 @@ experiment "Main Model" type: gui
 			
 			
 			{
-				data "repeat" value:(inhabitants count (each.behavior = "repeat")) 	 color:#blue style:spline thickness:3;
-				data "imitate" value:(inhabitants count (each.behavior = "imitate")) 	color:#red style:spline;
-				data "inquire" value:(inhabitants count (each.behavior = "inquire")) 	color:#green style:spline;
-				data "optimize" value:(inhabitants count (each.behavior = "optimize")) 	 color:#orange style:spline;
+				data "repeat" value:(inhabitants count (each.behavior = "repeat")) 	 color:#blue ;
+				data "imitate" value:(inhabitants count (each.behavior = "imitate")) 	color:#red ;
+				data "inquire" value:(inhabitants count (each.behavior = "inquire")) 	color:#green ;
+				data "optimize" value:(inhabitants count (each.behavior = "optimize")) 	 color:#orange ;
 			}
 			
 		}
+		
+		display "consumat" type:opengl camera_pos:{5.0,5.0,50} camera_up_vector:{0,0,-1} camera_look_pos:{5,5,0} refresh:every(0.5#day){
+			species inhabitants aspect: consumat;
+		}
+		
 		
 //		display "travel time"{
 //			chart "travel time" type:histogram{
