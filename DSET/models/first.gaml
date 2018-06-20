@@ -83,7 +83,7 @@ list<int> work_bike_min <- [19,23];
 		
 		
 		create roads from: shape_file_streets;
-		map<roads,float> weights_map <- roads as_map (each:: (each.shape.perimeter * (1+ rnd(1))));
+		map<roads,float> weights_map <- roads as_map (each:: (each.shape.perimeter * each.road_weight));
 		g <- as_edge_graph(roads) with_weights weights_map;
 		
 		
@@ -158,6 +158,7 @@ species buildings schedules:[]
 species roads
 {
 	float speed_limit_on_street <- 35.0 #km / #hour;
+	float road_weight <- rnd(1.0,2.0);
 	
 	init
 	{
@@ -166,6 +167,10 @@ species roads
 	aspect a
 	{
 		draw shape+1 color: # black;
+	}
+	
+	reflex update_road_weight when:every(12 #hour){
+		road_weight <- rnd(1.0,2.0);
 	}
 }
 
@@ -1206,8 +1211,8 @@ experiment "Main Model" type: gui
 			chart "mode share" type:series 
 			style:spline
 			//y_range:{0,1000}
-			 x_serie_labels: current_date.date
-			 series_label_position: onchart
+			 x_serie_labels: string(current_date, "dd MMMM yyyy") 
+			 series_label_position: xaxis
 			{
 				data "bike" value:length(list(inhabitants) where (each.value_mode_actual = 1)) color:#blue  thickness:2 marker:true;
 				data "walk" value:length(list(inhabitants) where (each.value_mode_actual = 2)) color:#red  thickness:2 marker:true;
@@ -1251,3 +1256,6 @@ experiment "Main Model" type: gui
 	}
 
 }
+
+
+
