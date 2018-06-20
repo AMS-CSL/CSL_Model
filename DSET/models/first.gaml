@@ -867,7 +867,7 @@ action calculate_ratio_uncertainty_uncertainty_tolerance_level (int s){
 
 init
 	{
-	do get_peers(list(inhabitants), distance_between_homes, relative_work_work_distance);
+	do get_peers(list(inhabitants), distance_between_homes, relative_work_work_distance); //this adds  peers when simulation is started
 		
 		do assign_initial_cognitive_memory;
 		my_morning_travel_time <-  one_of((mode_specific_memory[self.value_mode_actual]));
