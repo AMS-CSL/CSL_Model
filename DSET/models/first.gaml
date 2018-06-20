@@ -83,7 +83,7 @@ list<int> work_bike_min <- [19,23];
 		
 		
 		create roads from: shape_file_streets;
-		map<roads,float> weights_map <- roads as_map (each:: (each.shape.perimeter * each.road_weight));
+		map<roads,float> weights_map <- roads as_map (each:: (each.shape.perimeter * each.road_weight)); // weights are limited to a max of 2, that means, max travel time will be twice free flow time
 		g <- as_edge_graph(roads) with_weights weights_map;
 		
 		
@@ -867,7 +867,7 @@ action calculate_ratio_uncertainty_uncertainty_tolerance_level (int s){
 
 init
 	{
-	//do select_peers;
+	do get_peers(list(inhabitants), distance_between_homes, relative_work_work_distance);
 		
 		do assign_initial_cognitive_memory;
 		my_morning_travel_time <-  one_of((mode_specific_memory[self.value_mode_actual]));
@@ -967,7 +967,7 @@ init
 	
 		//GET PEERS
 		do get_peers(list(inhabitants), distance_between_homes, relative_work_work_distance);
-		
+		write my_peers;
 		//NEED CALCULATIONS
 		my_need_social <- calculate_social_need_satisfaction(self) ;
 		my_need_personal <- calculate_personal_need_satisfaction(self);
