@@ -5,7 +5,7 @@
 * Tags: Tag1, Tag2, TagN
 * draw string("Off_" + int(self)) color: # white font: font('Helvetica Neue', 12, # bold + # italic);
 */
-model model1
+model ams
 //import "dset_functions_library.gaml"
 import "behavior.gaml"
 //import "ptModel.gaml"
@@ -118,6 +118,40 @@ list<int> work_bike_min <- [19,23];
 	reflex update_graph{
 		map<roads,float> weights_map <- roads as_map (each:: ( each.shape.perimeter));
 		g <- g with_weights weights_map;
+	}
+	
+	// VARIABLES FOR TRAVEL TIME CHARTS
+	 list<point> p_for_cars<- [];
+	 list<point> p_for_bike<- [];
+	 list<point> p_for_walk<- [];
+	 list<point> p_for_pt<- [];
+	 
+	 
+	 
+	reflex compare_travel_time when:every(12 #hour){
+	list<list<float>> car_freeflow_travel_time <- [((inhabitants where (each.my_mode_actual = "car")) collect (each.my_morning_travel_time)),((inhabitants where (each.my_mode_actual = "car")) collect (each.my_morning_travel_time))];
+	
+        loop i from:0 to:length(car_freeflow_travel_time[0])-1{
+            p_for_cars<+point((car_freeflow_travel_time collect (each [i])));
+        } 
+        
+        //for bike
+        
+        list<list<float>> bike_freeflow_travel_time <- [((inhabitants where (each.my_mode_actual = "bike")) collect (each.my_morning_travel_time)),((inhabitants where (each.my_mode_actual = "bike")) collect (each.my_morning_travel_time))];
+	
+        loop i from:0 to:length(bike_freeflow_travel_time[0])-1{
+            p_for_bike<+point((bike_freeflow_travel_time collect (each [i])));
+        } 
+        
+        //for pt
+        list<list<float>> pt_freeflow_travel_time <- [((inhabitants where (each.my_mode_actual = "pt")) collect (each.my_morning_travel_time)),((inhabitants where (each.my_mode_actual = "pt")) collect (each.my_morning_travel_time))];
+	
+        loop i from:0 to:length(pt_freeflow_travel_time[0])-1{
+            p_for_pt<+point((pt_freeflow_travel_time collect (each [i])));
+        } 
+        
+        
+	
 	}
 }
 
@@ -493,7 +527,7 @@ point the_target <- nil;
 		float my_last_day_travel_time;
 		float avg_my_last_5_days_travel_time_mode_spefiic;
 
-	float calculate_existence_need_satisfaction (inhabitants i)
+	float calculate_existence_need_satisfaction (inhabitants i) // see the new function with suffic _modified
 	{
 		//write "inside existence \t"+ i.memory_all_modes;
 		 avg_my_last_5_days_travel_time_mode_spefiic <- mean(i.mode_specific_memory[i.value_mode_actual]);
@@ -529,7 +563,7 @@ float calculate_existence_need_satisfaction_modified (inhabitants i)
 		 //avg_my_last_5_days_travel_time_mode_spefiic <- mean(i.mode_specific_memory[i.value_mode_actual]);
 		 // get last value in the list of mode specific travel time list 
 		 my_last_day_travel_time <- i.mode_specific_memory[i.value_mode_actual][cognitive_effort-1];
-		 float d <- get_distance_to_work(i);
+		 float d <- get_distance_to_work(i);                                    
 		 float speed_of_last_trip <- d/(my_last_day_travel_time);//distance divided by time m/s 
 		 
 		 
@@ -546,10 +580,10 @@ float calculate_existence_need_satisfaction_modified (inhabitants i)
 
 
 //----------------------------------------------------------------------------------------------------------------------------------------------------------------------------//
-//																																     //
-//									                          5. TOTAL NEEDS CALCULATION &  RATIO											  	     //
-//																																     //
-//----------------------------------------------------------------------------------------------------------------------------------------------------------------------------//
+//																																  					 //
+//									                          5. TOTAL NEEDS CALCULATION &  RATIO											  		              //
+//																																   				       //
+//---------------------------------------------------------------------------------------------------------------------------------------------------------------------------//
 
 
 float calculate_overall_need_satisfaction {
@@ -989,6 +1023,8 @@ init
 	}
 
 
+
+
 	reflex every_morning when:cycle>1 and current_date.hour = mhdt[0] and current_date.minute = mhdt[1] and !(my_office covers location) and current_date.day_of_week <6
 	{
 		
@@ -1178,7 +1214,7 @@ experiment "Main Model" type: gui
 		monitor "pt" value: inhabitants count (each.value_mode_actual = 3) ;
 		monitor "car" value: inhabitants count (each.value_mode_actual = 4) ;
 		monitor "nummber of people at work  "  value: inhabitants count (each.my_office covers each.location);
-		display d type: java2D
+		display "City of Amsterdam" type: java2D
 		{
 			species study_area aspect: a;
 			species buildings aspect: a refresh:false;
@@ -1207,23 +1243,24 @@ experiment "Main Model" type: gui
 //			
 //		}// shall i run the model?
 		
-		display "modal share" type:java2D refresh: every(1#day) {
+		display "Modal share" type:java2D refresh: every(1#day) {
 			chart "mode share" type:series 
 			style:spline
 			//y_range:{0,1000}
-			 x_serie_labels: string(current_date, "dd MMMM yyyy") 
+			 x_serie_labels: string(current_date,"dd MMMM yyyy") 
+			 x_tick_unit:24*60
 			 series_label_position: xaxis
 			{
-				data "bike" value:length(list(inhabitants) where (each.value_mode_actual = 1)) color:#blue  thickness:2 marker:true;
-				data "walk" value:length(list(inhabitants) where (each.value_mode_actual = 2)) color:#red  thickness:2 marker:true;
+				data "bike" value:length(list(inhabitants) where (each.value_mode_actual = 1)) color:#blue  thickness:2 marker:false;
+				data "walk" value:length(list(inhabitants) where (each.value_mode_actual = 2)) color:#red  thickness:2 marker:false;
 				data "pt" value:length(list(inhabitants) where (each.value_mode_actual = 3)) color:#green  thickness:2 marker:false;
 				data "car" value:length(list(inhabitants) where (each.value_mode_actual = 4)) color:#maroon  thickness:2 marker:false;
-				data "" value:length(list(inhabitants) where (each.value_mode_actual = 1)) color:rgb(#blue,0.12)  thickness:27 marker:true;
+				data "" value:length(list(inhabitants) where (each.value_mode_actual = 1)) color:rgb(#blue,0.12)  thickness:27 marker:false;
 			}
 			
 		}
 		
-		display "decisions" type:java2D {
+		display "Decisions" type:java2D {
 			chart "decision made" type:histogram
 			
 			
@@ -1237,22 +1274,53 @@ experiment "Main Model" type: gui
 			
 		}
 		
-		display "consumat" type:opengl camera_pos:{5.0,5.0,50} camera_up_vector:{0,0,-1} camera_look_pos:{5,5,0} refresh:every(0.5#day){
+		display "Consumat" type:opengl camera_pos:{5.0,5.0,50} camera_up_vector:{0,0,-1} camera_look_pos:{5,5,0} refresh:every(0.5#day){
 			species inhabitants aspect: consumat;
 		}
 		
 		
-//		display "travel time"{
-//			chart "travel time" type:histogram{
-//				data "car" value:mean((inhabitants where (each.my_mode_actual = "car")) collect (each.my_morning_travel_time))	 color:#blue style:spline thickness:3;
+		display "travel time" refresh: (cycle>1 and every(12 #hour)){
+//			list<list<float>> car_tt <- [
+//				((inhabitants where (each.my_mode_actual = "car")) collect (each.my_morning_travel_time)),
+//				((inhabitants where (each.my_mode_actual = "car")) collect (each.my_morning_travel_time))];
+
+			chart "travel time" type:scatter x_range:[0,1500]{
+				data "cars" value:p_for_cars	 color:#blue ;
+				data "bike" value:p_for_bike	 color:#red ;
+				data "cptars" value:p_for_pt	 color:#green ;
 //				data "pt" value:mean((inhabitants where (each.my_mode_actual = "pt")) collect (each.my_morning_travel_time)) 	color:#red style:spline;
 //				data "walk" value:mean((inhabitants where (each.my_mode_actual = "walk"))  collect (each.my_morning_travel_time))	color:#green style:spline;
 //				data "bike" value:mean((inhabitants where (each.my_mode_actual = "bike"))  collect (each.my_morning_travel_time))	 color:#orange style:spline;
-//			}
-//		}
+			}
+		}
 		
 		
 
+	}
+	
+	
+	init {
+		create ams_model with: [inhabitant_population::100]; //second simulation with different parameters
+
+	}
+	
+	permanent {
+		display Comparison background: #white {
+			chart "Food Gathered" type: series 
+			x_serie_labels: string(current_date,"dd MMMM yyyy") 
+			 x_tick_unit:24*60
+			 series_label_position: xaxis {
+				
+							
+				loop s over: simulations {
+				data "bike" value:length(list(inhabitants) where (each.value_mode_actual = 1)) color:#blue  thickness:2 marker:false;
+				data "walk" value:length(list(inhabitants) where (each.value_mode_actual = 2)) color:#red  thickness:2 marker:false;
+				data "pt" value:length(list(inhabitants) where (each.value_mode_actual = 3)) color:#green  thickness:2 marker:false;
+				data "car" value:length(list(inhabitants) where (each.value_mode_actual = 4)) color:#maroon  thickness:2 marker:false;
+				data "" value:length(list(inhabitants) where (each.value_mode_actual = 1)) color:rgb(#blue,0.12)  thickness:27 marker:false;
+				}
+			}
+		}
 	}
 
 }
