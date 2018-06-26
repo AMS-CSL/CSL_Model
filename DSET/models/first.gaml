@@ -1,7 +1,7 @@
 /**
 * Name: model1
-* Author: Srirama Bhamidipati
-* Description: 
+* Author: Srirama Bhamidipati, Erika Speelman, Arend Ligtenberg - 
+* Description: Wageningen University and Research
 * Tags: Tag1, Tag2, TagN
 * draw string("Off_" + int(self)) color: # white font: font('Helvetica Neue', 12, # bold + # italic);
 */
