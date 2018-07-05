@@ -192,7 +192,7 @@ species buildings schedules:[]
 species roads
 {
 	float speed_limit_on_street <- 35.0 #km / #hour;
-	float road_weight <- rnd(1.0,2.0);
+	float road_weight <- rnd(1.0,2.0) ;
 	
 	init
 	{
@@ -958,7 +958,7 @@ init
 
 	list<int> get_morning_departure_time{
 	
-	int morning_hour <-  round(gauss(8,0.5));
+	int morning_hour <-   (sample([7,8,9],2,true,[0.3,0.6,0.1]))[0];
 	int morning_minute <- int(rnd(0,59));
 	//write morning_minute;
 	//write morning_hour;
@@ -968,7 +968,7 @@ init
 
 	list<int> get_evening_departure_time{
 	
-	int evening_hour <-round(gauss(17,0.5));
+	int evening_hour <-(sample([16,17,18],2,true,[0.3,0.6,0.1]))[0];
 	int evening_minute <- int(rnd(0,59));
 	return [evening_hour, evening_minute];
 	}
@@ -1299,29 +1299,29 @@ experiment "Main Model" type: gui
 	}
 	
 	
-	init {
-		create ams_model with: [inhabitant_population::100]; //second simulation with different parameters
-
-	}
-	
-	permanent {
-		display Comparison background: #white {
-			chart "Food Gathered" type: series 
-			x_serie_labels: string(current_date,"dd MMMM yyyy") 
-			 x_tick_unit:24*60
-			 series_label_position: xaxis {
-				
-							
-				loop s over: simulations {
-				data "bike" value:length(list(inhabitants) where (each.value_mode_actual = 1)) color:#blue  thickness:2 marker:false;
-				data "walk" value:length(list(inhabitants) where (each.value_mode_actual = 2)) color:#red  thickness:2 marker:false;
-				data "pt" value:length(list(inhabitants) where (each.value_mode_actual = 3)) color:#green  thickness:2 marker:false;
-				data "car" value:length(list(inhabitants) where (each.value_mode_actual = 4)) color:#maroon  thickness:2 marker:false;
-				data "" value:length(list(inhabitants) where (each.value_mode_actual = 1)) color:rgb(#blue,0.12)  thickness:27 marker:false;
-				}
-			}
-		}
-	}
+//	init {
+//		create ams_model with: [inhabitant_population::100]; //second simulation with different parameters
+//
+//	}
+//	
+//	permanent {
+//		display Comparison background: #white {
+//			chart "Food Gathered" type: series 
+//			x_serie_labels: string(current_date,"dd MMMM yyyy") 
+//			 x_tick_unit:24*60
+//			 series_label_position: xaxis {
+//				
+//							
+//				loop s over: simulations {
+//				data "bike" value:length(list(inhabitants) where (each.value_mode_actual = 1)) color:#blue  thickness:2 marker:false;
+//				data "walk" value:length(list(inhabitants) where (each.value_mode_actual = 2)) color:#red  thickness:2 marker:false;
+//				data "pt" value:length(list(inhabitants) where (each.value_mode_actual = 3)) color:#green  thickness:2 marker:false;
+//				data "car" value:length(list(inhabitants) where (each.value_mode_actual = 4)) color:#maroon  thickness:2 marker:false;
+//				data "" value:length(list(inhabitants) where (each.value_mode_actual = 1)) color:rgb(#blue,0.12)  thickness:27 marker:false;
+//				}
+//			}
+//		}
+//	}
 
 }
 
