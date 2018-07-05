@@ -1013,8 +1013,9 @@ init
 		
 		//FIXME check uncertainty_tolerance_level_ratio it does not look right
 		// BEHAVIOR
-		 //behavior <- world.choose_behavior(inhabitant_overall_need_satisfaction_aspiration_level_ratio,inhabitant_uncertainty_uncertainty_tolerance_ratio);//inhabitant_uncertainty_uncertainty_tolerance_ratio
-		  behavior <- world.choose_behavior(rnd(1.0),rnd(1.0));
+		 behavior <- world.choose_behavior(inhabitant_overall_need_satisfaction_aspiration_level_ratio,inhabitant_uncertainty_uncertainty_tolerance_ratio);//
+
+		  //behavior <- world.choose_behavior(rnd(1.0),rnd(1.0));
 		//write "behavior = " + behavior;
 		do execute_a_behavior(behavior);
 		
