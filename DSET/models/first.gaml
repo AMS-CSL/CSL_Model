@@ -83,7 +83,7 @@ list<int> work_bike_min <- [19,23];
 		
 		
 		create roads from: shape_file_streets;
-		map<roads,float> weights_map <- roads as_map (each:: (each.shape.perimeter * each.road_weight)); // weights are limited to a max of 2, that means, max travel time will be twice free flow time
+		map<roads,float> weights_map <- roads as_map (each:: (each.shape.perimeter * each.road_weight)); // weights are limited to a max of 2, that means, max travel time will be twice free-flow time
 		g <- as_edge_graph(roads) with_weights weights_map;
 		
 		
@@ -116,8 +116,8 @@ list<int> work_bike_min <- [19,23];
 	}
 	
 	reflex update_graph{
-		map<roads,float> weights_map <- roads as_map (each:: ( each.shape.perimeter));
-		g <- g with_weights weights_map;
+		map<roads,float> weights_map <- roads as_map (each:: (each.shape.perimeter * each.road_weight)); // weights are limited to a max of 2, that means, max travel time will be twice free-flow time
+		g <- as_edge_graph(roads) with_weights weights_map;
 	}
 	
 	// VARIABLES FOR TRAVEL TIME CHARTS
@@ -958,7 +958,7 @@ init
 
 	list<int> get_morning_departure_time{
 	
-	int morning_hour <-   (sample([7,8,9],2,true,[0.3,0.6,0.1]))[0];
+	int morning_hour <-   (sample([7,8,9],1,true,[0.3,0.6,0.1]))[0];
 	int morning_minute <- int(rnd(0,59));
 	//write morning_minute;
 	//write morning_hour;
@@ -968,7 +968,7 @@ init
 
 	list<int> get_evening_departure_time{
 	
-	int evening_hour <-(sample([16,17,18],2,true,[0.3,0.6,0.1]))[0];
+	int evening_hour <-(sample([16,17,18],1,true,[0.3,0.6,0.1]))[0];
 	int evening_minute <- int(rnd(0,59));
 	return [evening_hour, evening_minute];
 	}
@@ -1213,7 +1213,13 @@ experiment "Main Model" type: gui
 		monitor "walk" value: inhabitants count (each.value_mode_actual = 2) ;
 		monitor "pt" value: inhabitants count (each.value_mode_actual = 3) ;
 		monitor "car" value: inhabitants count (each.value_mode_actual = 4) ;
-		monitor "nummber of people at work  "  value: inhabitants count (each.my_office covers each.location);
+		monitor "number of people at work  "  value: inhabitants count (each.my_office covers each.location);
+		
+		
+		monitor "repeat" value: inhabitants count (each.behavior = "repeat" ) color:#green;
+		monitor "imitate" value: inhabitants count (each.behavior = "imitate") color:#green;
+		monitor "inquire" value: inhabitants count (each.behavior = "inquire") color:#green;
+		monitor "optimize" value: inhabitants count (each.behavior = "optimize") color:#green;
 		display "City of Amsterdam" type: java2D
 		{
 			species study_area aspect: a;
