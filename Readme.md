@@ -1,3 +1,7 @@
+# Download the latest model
+
+This is the latest model [Download](https://github.com/AMS-CSL/CSL_Model/releases/tag/v1.0) 
+
 # Repository Information
 
 This repository will contain data and model files for the city simulator project. 
