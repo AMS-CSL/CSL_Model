@@ -1012,7 +1012,7 @@ init
 	
 		//GET PEERS
 		do get_peers(list(inhabitants), distance_between_homes, relative_work_work_distance);
-		write my_peers;
+		//write my_peers;
 		//NEED CALCULATIONS
 		my_need_social <- calculate_social_need_satisfaction(self) ;
 		my_need_personal <- calculate_personal_need_satisfaction(self);
@@ -1021,7 +1021,11 @@ init
 		my_overall_needs_satisfaction <- calculate_overall_need_satisfaction();
 		do calculate_relative_overall_need_satisfaction;
 		//UNCERTAINTY
-		
+		//FIXME fix this warning in the line below
+		my_uncertainty <- get_uncertainty_travel_time_for_all_modes(self);
+		write ">>>>>>>>>>>>  " + my_uncertainty + "  <<<<<<";
+		//FIXME check input and output to this function like below
+		do calculate_ratio_uncertainty_uncertainty_tolerance_level(self.value_mode_actual);
 		//FIXME check uncertainty_tolerance_level_ratio it does not look right
 		// BEHAVIOR
 		 behavior <- world.choose_behavior(inhabitant_overall_need_satisfaction_aspiration_level_ratio,inhabitant_uncertainty_uncertainty_tolerance_ratio);//
@@ -1060,7 +1064,7 @@ init
 		{
 			my_morning_office_arrive_time <- current_date;
 			my_morning_travel_time <- my_morning_office_arrive_time - my_morning_home_depart_time;
-			write "my_morning_travel_time " + my_morning_travel_time + " on mode " + self.my_mode_actual + " for distance "  + distance_between(topology(g), [self.my_office, self.my_home]);
+			//write "my_morning_travel_time " + my_morning_travel_time + " on mode " + self.my_mode_actual + " for distance "  + distance_between(topology(g), [self.my_office, self.my_home]);
 			
 			switch value_mode_actual{
 				match 1 {
@@ -1082,7 +1086,7 @@ init
 				}
 			}
 			
-			write "my_morning_travel_time 2 " + my_morning_travel_time + " on mode " + self.my_mode_actual + " for distance "  + distance_between(topology(g), [self.my_office, self.my_home]);
+			//write "my_morning_travel_time 2 " + my_morning_travel_time + " on mode " + self.my_mode_actual + " for distance "  + distance_between(topology(g), [self.my_office, self.my_home]);
 			do update_mode_specific_memory(my_morning_travel_time, self.value_mode_actual);
 			the_target <- nil;
 		}
@@ -1113,7 +1117,7 @@ init
 			
 			my_evening_travel_time <- my_evening_home_arrive_time -  my_evening_office_depart_time ;
 			
-			write "my_evening_travel_time " + my_evening_travel_time  + " on mode " + self.my_mode_actual + " for distance "  + distance_between(topology(g), [self.my_office, self.my_home]);
+			//write "my_evening_travel_time " + my_evening_travel_time  + " on mode " + self.my_mode_actual + " for distance "  + distance_between(topology(g), [self.my_office, self.my_home]);
 			
 			//mode and their numbers <- ["bike"::1, "walk"::2, "pt"::3, "car"::4]; // integer identifier for mode
 			switch value_mode_actual{
@@ -1136,7 +1140,7 @@ init
 				}
 			}
 			
-			write "my_evening_travel_time 2 " + my_evening_travel_time  + " on mode " + self.my_mode_actual + " for distance "  + distance_between(topology(g), [self.my_office, self.my_home]);
+			//write "my_evening_travel_time 2 " + my_evening_travel_time  + " on mode " + self.my_mode_actual + " for distance "  + distance_between(topology(g), [self.my_office, self.my_home]);
 			do update_mode_specific_memory(my_evening_travel_time, self.value_mode_actual);
 			the_target <- nil;
 		}
@@ -1145,11 +1149,11 @@ init
 	
 	action update_mode_specific_memory (float tt, int mode){
 		//morn_tt is morning_travel_time
-		write tt;
-		write self.mode_specific_memory[mode];
+		//write tt;
+		//write self.mode_specific_memory[mode];
 		add tt to:self.mode_specific_memory[mode];
 		remove index:0 from:self.mode_specific_memory[mode];
-		write self.mode_specific_memory[mode];
+		//write self.mode_specific_memory[mode];
 	}
 
 	
@@ -1221,10 +1225,10 @@ experiment "Main Model" type: gui
 
 	output
 	{
-		monitor "bike" value: inhabitants count (each.value_mode_actual = 1) ;
-		monitor "walk" value: inhabitants count (each.value_mode_actual = 2) ;
-		monitor "pt" value: inhabitants count (each.value_mode_actual = 3) ;
-		monitor "car" value: inhabitants count (each.value_mode_actual = 4) ;
+		monitor "bike" value: inhabitants count (each.value_mode_actual = 1) color:#orange ;
+		monitor "walk" value: inhabitants count (each.value_mode_actual = 2) color:#orange;
+		monitor "pt" value: inhabitants count (each.value_mode_actual = 3) color:#orange;
+		monitor "car" value: inhabitants count (each.value_mode_actual = 4) color:#orange;
 		monitor "number of people at work  "  value: inhabitants count (each.my_office covers each.location);
 		
 		
