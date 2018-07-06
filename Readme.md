@@ -1,6 +1,6 @@
 # Download the latest model
 
-This is the latest model [Download](https://github.com/AMS-CSL/CSL_Model/releases/tag/v1.0) 
+This is the latest model [Download](https://github.com/AMS-CSL/CSL_Model/releases/latest) 
 
 # Repository Information
 
