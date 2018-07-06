@@ -601,7 +601,7 @@ float calculate_overall_need_satisfaction {
 	float a <- (inhabitant_relative_importance_existence_need * inhabitant_existence_need_satisfaction)+
 									 (inhabitant_relative_importance_personal_need * my_need_personal)+
 									 (inhabitant_relative_importance_social_need * my_need_social);
-									 
+								 
 	return a;
 }
 
@@ -613,6 +613,8 @@ action calculate_relative_overall_need_satisfaction {
         else {
         	inhabitant_overall_need_satisfaction_aspiration_level_ratio  <-  0.25;
         }
+        
+        write "satisfaction categorized " + inhabitant_overall_need_satisfaction_aspiration_level_ratio;
   }
 
 
@@ -723,6 +725,7 @@ action calculate_ratio_uncertainty_uncertainty_tolerance_level (int s){
 	else {
 		inhabitant_uncertainty_uncertainty_tolerance_ratio <-0.25;
 	}
+	write "uncertainty categorized " + inhabitant_uncertainty_uncertainty_tolerance_ratio;
 }
 
 
@@ -1017,16 +1020,16 @@ init
 		my_need_social <- calculate_social_need_satisfaction(self) ;
 		my_need_personal <- calculate_personal_need_satisfaction(self);
 		my_need_existence <- calculate_existence_need_satisfaction_modified(self);
-		write ">>>>>>>>>>>>  " + my_need_existence + "  <<<<<<";
+		write "my need existence  " + my_need_existence + "  <<<<<<";
 		my_overall_needs_satisfaction <- calculate_overall_need_satisfaction();
 		do calculate_relative_overall_need_satisfaction;
 		//UNCERTAINTY
 		//FIXME fix this warning in the line below
-		my_uncertainty <- get_uncertainty_travel_time_for_all_modes(self);
-		write ">>>>>>>>>>>>  " + my_uncertainty + "  <<<<<<";
-		//FIXME check input and output to this function like below
+		my_uncertainty <-  map<int, float>(get_uncertainty_travel_time_for_all_modes(self));
+		write " my uncertainty " + my_uncertainty + "  <<<<<<";
+		
 		do calculate_ratio_uncertainty_uncertainty_tolerance_level(self.value_mode_actual);
-		//FIXME check uncertainty_tolerance_level_ratio it does not look right
+		
 		// BEHAVIOR
 		 behavior <- world.choose_behavior(inhabitant_overall_need_satisfaction_aspiration_level_ratio,inhabitant_uncertainty_uncertainty_tolerance_ratio);//
 
@@ -1200,7 +1203,7 @@ init
 	
 	aspect consumat {
 		
-	draw circle(1) color:#black at:{inhabitant_overall_need_satisfaction_aspiration_level_ratio *10,inhabitant_uncertainty_uncertainty_tolerance_ratio *10};
+	draw circle(0.1) color:#black at:{inhabitant_overall_need_satisfaction_aspiration_level_ratio *10,inhabitant_uncertainty_uncertainty_tolerance_ratio *10};
 	}
 
 }
@@ -1212,7 +1215,7 @@ init
 //------------------------------------------------------------------------------------------
 experiment "Main Model" type: gui
 {
-	float seed <- 0.8484812926428652;
+	//float seed <- 0.8484812926428652;
 	float minimum_cycle_duration <-0.1;
 	parameter "Proportion of offices in landuse" var: proportion_of_offices min: 0.0 max: 1.0 step: 0.1 category: "Global Model Parameters";
 	parameter "Inverse speed" var:inverse_speed category: "Clarify";
@@ -1273,25 +1276,27 @@ experiment "Main Model" type: gui
 			 x_tick_unit:24*60
 			 series_label_position: xaxis
 			{
-				data "bike" value:length(list(inhabitants) where (each.value_mode_actual = 1)) color:#blue  thickness:2 marker:false;
-				data "walk" value:length(list(inhabitants) where (each.value_mode_actual = 2)) color:#red  thickness:2 marker:false;
-				data "pt" value:length(list(inhabitants) where (each.value_mode_actual = 3)) color:#green  thickness:2 marker:false;
+				data "bike" value:length(list(inhabitants) where (each.value_mode_actual = 1)) color:#indigo  thickness:2 marker:false;
+				data "walk" value:length(list(inhabitants) where (each.value_mode_actual = 2)) color:#deepskyblue  thickness:2 marker:false;
+				data "pt" value:length(list(inhabitants) where (each.value_mode_actual = 3)) color:#mediumvioletred  thickness:2 marker:false;
 				data "car" value:length(list(inhabitants) where (each.value_mode_actual = 4)) color:#maroon  thickness:2 marker:false;
-				data "" value:length(list(inhabitants) where (each.value_mode_actual = 1)) color:rgb(#blue,0.12)  thickness:27 marker:false;
+				data "" value:length(list(inhabitants) where (each.value_mode_actual = 1)) color:rgb(#indigo,0.12)  thickness:27 marker:false;
 			}
 			
 		}
 		
-		display "Decisions" type:java2D {
-			chart "decision made" type:histogram
-			
+		display "Decisions" type:java2D refresh: every(1#day) {
+			chart "decision made" type:series
+			 x_serie_labels: string(current_date,"dd MMMM yyyy") 
+			 x_tick_unit:24*60
+			 series_label_position: xaxis
 			
 			
 			{
-				data "repeat" value:(inhabitants count (each.behavior = "repeat")) 	 color:#blue ;
-				data "imitate" value:(inhabitants count (each.behavior = "imitate")) 	color:#red ;
-				data "inquire" value:(inhabitants count (each.behavior = "inquire")) 	color:#green ;
-				data "optimize" value:(inhabitants count (each.behavior = "optimize")) 	 color:#orange ;
+				data "repeat" value:(inhabitants count (each.behavior = "repeat")) 	 color:#blue thickness:2 marker:false ;
+				data "imitate" value:(inhabitants count (each.behavior = "imitate")) 	color:#red thickness:2 marker:false;
+				data "inquire" value:(inhabitants count (each.behavior = "inquire")) 	color:#green thickness:2 marker:false;
+				data "optimize" value:(inhabitants count (each.behavior = "optimize")) 	 color:#orange thickness:2 marker:false ;
 			}
 			
 		}
