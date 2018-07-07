@@ -83,7 +83,7 @@ list<int> work_bike_min <- [19,23];
 		
 		
 		create roads from: shape_file_streets;
-		map<roads,float> weights_map <- roads as_map (each:: (each.shape.perimeter * each.road_weight)); // weights are limited to a max of 2, that means, max travel time will be twice free flow time
+		map<roads,float> weights_map <- roads as_map (each:: (each.shape.perimeter * each.road_weight)); // weights are limited to a max of 2, that means, max travel time will be twice free-flow time
 		g <- as_edge_graph(roads) with_weights weights_map;
 		
 		
@@ -116,8 +116,8 @@ list<int> work_bike_min <- [19,23];
 	}
 	
 	reflex update_graph{
-		map<roads,float> weights_map <- roads as_map (each:: ( each.shape.perimeter));
-		g <- g with_weights weights_map;
+		map<roads,float> weights_map <- roads as_map (each:: (each.shape.perimeter * each.road_weight)); // weights are limited to a max of 2, that means, max travel time will be twice free-flow time
+		g <- as_edge_graph(roads) with_weights weights_map;
 	}
 	
 	// VARIABLES FOR TRAVEL TIME CHARTS
@@ -192,7 +192,7 @@ species buildings schedules:[]
 species roads
 {
 	float speed_limit_on_street <- 35.0 #km / #hour;
-	float road_weight <- rnd(1.0,2.0);
+	float road_weight <- rnd(1.0,2.0) ;
 	
 	init
 	{
@@ -958,7 +958,7 @@ init
 
 	list<int> get_morning_departure_time{
 	
-	int morning_hour <-  round(gauss(8,0.5));
+	int morning_hour <-   (sample([7,8,9],1,true,[0.3,0.6,0.1]))[0];
 	int morning_minute <- int(rnd(0,59));
 	//write morning_minute;
 	//write morning_hour;
@@ -968,7 +968,7 @@ init
 
 	list<int> get_evening_departure_time{
 	
-	int evening_hour <-round(gauss(17,0.5));
+	int evening_hour <-(sample([16,17,18],1,true,[0.3,0.6,0.1]))[0];
 	int evening_minute <- int(rnd(0,59));
 	return [evening_hour, evening_minute];
 	}
@@ -1013,8 +1013,9 @@ init
 		
 		//FIXME check uncertainty_tolerance_level_ratio it does not look right
 		// BEHAVIOR
-		 behavior <- world.choose_behavior(inhabitant_overall_need_satisfaction_aspiration_level_ratio,inhabitant_uncertainty_uncertainty_tolerance_ratio);//inhabitant_uncertainty_uncertainty_tolerance_ratio
-		 // behavior <- world.choose_behavior(rnd(1.0),rnd(1.0));
+		 behavior <- world.choose_behavior(inhabitant_overall_need_satisfaction_aspiration_level_ratio,inhabitant_uncertainty_uncertainty_tolerance_ratio);//
+
+		  //behavior <- world.choose_behavior(rnd(1.0),rnd(1.0));
 		//write "behavior = " + behavior;
 		do execute_a_behavior(behavior);
 		
@@ -1213,7 +1214,13 @@ experiment "Main Model" type: gui
 		monitor "walk" value: inhabitants count (each.value_mode_actual = 2) ;
 		monitor "pt" value: inhabitants count (each.value_mode_actual = 3) ;
 		monitor "car" value: inhabitants count (each.value_mode_actual = 4) ;
-		monitor "nummber of people at work  "  value: inhabitants count (each.my_office covers each.location);
+		monitor "number of people at work  "  value: inhabitants count (each.my_office covers each.location);
+		
+		
+		monitor "repeat" value: inhabitants count (each.behavior = "repeat" ) color:#green;
+		monitor "imitate" value: inhabitants count (each.behavior = "imitate") color:#green;
+		monitor "inquire" value: inhabitants count (each.behavior = "inquire") color:#green;
+		monitor "optimize" value: inhabitants count (each.behavior = "optimize") color:#green;
 		display "City of Amsterdam" type: java2D
 		{
 			species study_area aspect: a;
@@ -1299,29 +1306,29 @@ experiment "Main Model" type: gui
 	}
 	
 	
-	init {
-		create ams_model with: [inhabitant_population::100]; //second simulation with different parameters
-
-	}
-	
-	permanent {
-		display Comparison background: #white {
-			chart "Food Gathered" type: series 
-			x_serie_labels: string(current_date,"dd MMMM yyyy") 
-			 x_tick_unit:24*60
-			 series_label_position: xaxis {
-				
-							
-				loop s over: simulations {
-				data "bike" value:length(list(inhabitants) where (each.value_mode_actual = 1)) color:#blue  thickness:2 marker:false;
-				data "walk" value:length(list(inhabitants) where (each.value_mode_actual = 2)) color:#red  thickness:2 marker:false;
-				data "pt" value:length(list(inhabitants) where (each.value_mode_actual = 3)) color:#green  thickness:2 marker:false;
-				data "car" value:length(list(inhabitants) where (each.value_mode_actual = 4)) color:#maroon  thickness:2 marker:false;
-				data "" value:length(list(inhabitants) where (each.value_mode_actual = 1)) color:rgb(#blue,0.12)  thickness:27 marker:false;
-				}
-			}
-		}
-	}
+//	init {
+//		create ams_model with: [inhabitant_population::100]; //second simulation with different parameters
+//
+//	}
+//	
+//	permanent {
+//		display Comparison background: #white {
+//			chart "Food Gathered" type: series 
+//			x_serie_labels: string(current_date,"dd MMMM yyyy") 
+//			 x_tick_unit:24*60
+//			 series_label_position: xaxis {
+//				
+//							
+//				loop s over: simulations {
+//				data "bike" value:length(list(inhabitants) where (each.value_mode_actual = 1)) color:#blue  thickness:2 marker:false;
+//				data "walk" value:length(list(inhabitants) where (each.value_mode_actual = 2)) color:#red  thickness:2 marker:false;
+//				data "pt" value:length(list(inhabitants) where (each.value_mode_actual = 3)) color:#green  thickness:2 marker:false;
+//				data "car" value:length(list(inhabitants) where (each.value_mode_actual = 4)) color:#maroon  thickness:2 marker:false;
+//				data "" value:length(list(inhabitants) where (each.value_mode_actual = 1)) color:rgb(#blue,0.12)  thickness:27 marker:false;
+//				}
+//			}
+//		}
+//	}
 
 }
 
