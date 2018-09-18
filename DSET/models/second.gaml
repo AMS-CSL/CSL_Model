@@ -47,7 +47,7 @@ float uncertainty_constant_2 <- 0.5;
 	float distance_between_homes <- 2000.0;
 	float relative_work_work_distance <- 3000.0;
 	int inhabitant_population <- 50;
-//TODO check if this below  should be global or agent specific
+
 	float max_travel_mode_difference <-3.0;
 	
 	
@@ -187,13 +187,13 @@ species buildings schedules:[]
 
 	aspect transparent_frame
 	{
-		float building_height <- rnd(3.0, 12.0);
+		float building_height <- rnd(13.0, 22.0);
 		if use = "office"
 		{
-			my_color <- rgb(#olive, 0.2);
+			my_color <- rgb(#olive, 0.9);
 		} else
 		{
-			my_color <- rgb(# beige, 0.2);
+			my_color <- rgb(# beige, 0.7);
 		}
 		draw shape color: my_color depth: building_height;
 		//draw shape color: my_color at: { location.x, location.y, building_height };
@@ -295,9 +295,9 @@ point the_target <- nil;
 
 
 
-	// TIME VARIABLES  // CAREFUL: ---- TRAVEL TIME OR DIFFERENCE IN DATES VARIABLES IS  CAPTURED IN SECONDS
+	// TIME VARIABLES  // NOTE: ---- TRAVEL TIME OR DIFFERENCE IN DATES VARIABLES IS  CAPTURED IN SECONDS
 	list<int> mhdt ; //morning home departure time , used in this format just to use a guassian function
-	date my_morning_home_depart_time ;//<-my_morning_home_depart_time[0]+(my_morning_home_depart_time[1]/60)*100;
+	date my_morning_home_depart_time ;
 	date my_morning_office_arrive_time;
 	
 	float my_morning_travel_time ; // value in seconds
@@ -614,7 +614,7 @@ action calculate_relative_overall_need_satisfaction {
         	inhabitant_overall_need_satisfaction_aspiration_level_ratio  <-  0.25;
         }
         
-        write "satisfaction categorized " + inhabitant_overall_need_satisfaction_aspiration_level_ratio;
+        //write "satisfaction categorized " + inhabitant_overall_need_satisfaction_aspiration_level_ratio;
   }
 
 
@@ -725,7 +725,7 @@ action calculate_ratio_uncertainty_uncertainty_tolerance_level (int s){
 	else {
 		inhabitant_uncertainty_uncertainty_tolerance_ratio <-0.25;
 	}
-	write "uncertainty categorized " + inhabitant_uncertainty_uncertainty_tolerance_ratio;
+	//write "uncertainty categorized " + inhabitant_uncertainty_uncertainty_tolerance_ratio;
 }
 
 
@@ -988,7 +988,7 @@ init
 	}
 
 
-	reflex every_day when:  cycle > 1 and every(1 #day){
+	reflex every_day when:   every(1 #day){
 	
 	
 	
@@ -1020,13 +1020,13 @@ init
 		my_need_social <- calculate_social_need_satisfaction(self) ;
 		my_need_personal <- calculate_personal_need_satisfaction(self);
 		my_need_existence <- calculate_existence_need_satisfaction_modified(self);
-		write "my need existence  " + my_need_existence + "  <<<<<<";
+		//write "my need existence  " + my_need_existence + "  <<<<<<";
 		my_overall_needs_satisfaction <- calculate_overall_need_satisfaction();
 		do calculate_relative_overall_need_satisfaction;
 		//UNCERTAINTY
 		//FIXME fix this warning in the line below
 		my_uncertainty <-  map<int, float>(get_uncertainty_travel_time_for_all_modes(self));
-		write " my uncertainty " + my_uncertainty + "  <<<<<<";
+		//write " my uncertainty " + my_uncertainty + "  <<<<<<";
 		
 		do calculate_ratio_uncertainty_uncertainty_tolerance_level(self.value_mode_actual);
 		
@@ -1195,7 +1195,7 @@ init
 		if  my_office covers self.location{
 			draw circle(30) color:rgb(#blue,0.5);
 		} else if  my_home covers self.location{
-			draw circle(30) color:#yellow;
+			draw circle(30) color:#red;
 		} else {
 			draw circle(30) color:#lime;
 		}
@@ -1217,12 +1217,12 @@ experiment "Main Model" type: gui
 {
 	//float seed <- 0.8484812926428652;
 	float minimum_cycle_duration <-0.1;
-	parameter "Proportion of offices in landuse" var: proportion_of_offices min: 0.0 max: 1.0 step: 0.1 category: "Global Model Parameters";
-	parameter "Inverse speed" var:inverse_speed category: "Clarify";
-	parameter "Linear Forecast" var:expected_linear category: "Clarify";
+	parameter "Proportion of offices in landuse" var: proportion_of_offices min: 0.0 max: 1.0 step: 0.1 category: "Global Model Parameters" ;
+	//parameter "Inverse speed" var:inverse_speed category: "Clarify";
+	parameter "Linear Forecast" var:expected_linear category: "Estimate Next Day Travel Time";
 	parameter "Total inhabitant population" var: inhabitant_population min: 1 max: 1000 step: 100 category: "Global Model Parameters";
-	parameter "Work 2 Work distance" var: relative_work_work_distance min: 1.0 max: 20000.0 step: 100 category: "Peer Calculations";
-	parameter "Distance between peer homes" var: distance_between_homes min: 1.0 max: 5000.0 step: 100 category: "Peer Calculations";
+	parameter "Distance between workplaces of peers" var: relative_work_work_distance min: 1.0 max: 20000.0 step: 100 category: "Peer Parameters";
+	parameter "Distance between homes of peers" var: distance_between_homes min: 1.0 max: 5000.0 step: 100 category: "Peer Parameters";
 	/** Insert here the definition of the input and output of the model */
 	
 
@@ -1239,10 +1239,10 @@ experiment "Main Model" type: gui
 		monitor "imitate" value: inhabitants count (each.behavior = "imitate") color:#green;
 		monitor "inquire" value: inhabitants count (each.behavior = "inquire") color:#green;
 		monitor "optimize" value: inhabitants count (each.behavior = "optimize") color:#green;
-		display "City of Amsterdam" type: java2D
+		display "City of Amsterdam" type: opengl
 		{
 			species study_area aspect: a;
-			species buildings aspect: a refresh:false;
+			species buildings aspect: transparent_frame refresh:false;
 			species roads aspect: a;
 			//species inhabitants aspect: a ;
 			species inhabitants aspect: colors;
@@ -1268,35 +1268,57 @@ experiment "Main Model" type: gui
 //			
 //		}// shall i run the model?
 		
-		display "Modal share" type:java2D refresh: every(1#day) {
-			chart "mode share" type:series 
-			style:spline
+//		display "Modal share" type:java2D refresh: ((current_date.hour) = 0 and (current_date.minute) = 00) {
+//			 
+//			chart "mode share" type:series 
+//			style:spline
+//			//y_range:{0,1000}
+//			 x_serie_labels: string(current_date,"dd MMMM yyyy") 
+//			 x_tick_unit:24*60
+//			
+//			 series_label_position: xaxis
+//			{
+//				data "bike" value:length(list(inhabitants) where (each.value_mode_actual = 1)) color:#indigo  thickness:2 marker:true;
+//				data "walk" value:length(list(inhabitants) where (each.value_mode_actual = 2)) color:#deepskyblue  thickness:2 marker:true;
+//				data "pt" value:length(list(inhabitants) where (each.value_mode_actual = 3)) color:#mediumvioletred  thickness:2 marker:true;
+//				data "car" value:length(list(inhabitants) where (each.value_mode_actual = 4)) color:#maroon  thickness:2 marker:true;
+//				data "" value:length(list(inhabitants) where (each.value_mode_actual = 1)) color:rgb(#indigo,0.12)  thickness:27 marker:true;
+//			}
+//			
+//		}
+		
+		display "Mode share" type:java2D refresh:cycle > 0 and every(#day){// ((current_date.hour) = 0 and (current_date.minute) = 59) {
+			 
+			chart "Mode share" type:series 
+			//style:spline
 			//y_range:{0,1000}
 			 x_serie_labels: string(current_date,"dd MMMM yyyy") 
 			 x_tick_unit:24*60
+			
 			 series_label_position: xaxis
 			{
-				data "bike" value:length(list(inhabitants) where (each.value_mode_actual = 1)) color:#indigo  thickness:2 marker:false;
-				data "walk" value:length(list(inhabitants) where (each.value_mode_actual = 2)) color:#deepskyblue  thickness:2 marker:false;
-				data "pt" value:length(list(inhabitants) where (each.value_mode_actual = 3)) color:#mediumvioletred  thickness:2 marker:false;
-				data "car" value:length(list(inhabitants) where (each.value_mode_actual = 4)) color:#maroon  thickness:2 marker:false;
-				data "" value:length(list(inhabitants) where (each.value_mode_actual = 1)) color:rgb(#indigo,0.12)  thickness:27 marker:false;
+				data "bike" value:length(list(inhabitants) where (each.value_mode_actual = 1)) color:#indigo  thickness:2 marker:true;
+				data "walk" value:length(list(inhabitants) where (each.value_mode_actual = 2)) color:#deepskyblue  thickness:2 marker:true;
+				data "pt" value:length(list(inhabitants) where (each.value_mode_actual = 3)) color:#mediumvioletred  thickness:2 marker:true;
+				data "car" value:length(list(inhabitants) where (each.value_mode_actual = 4)) color:#maroon  thickness:2 marker:true;
+				data "" value:length(list(inhabitants) where (each.value_mode_actual = 1)) color:rgb(#indigo,0.12)  thickness:27 marker:true;
 			}
 			
 		}
 		
 		display "Decisions" type:java2D refresh: every(1#day) {
-			chart "decision made" type:series
+			chart "Decisions made" type:series
 			 x_serie_labels: string(current_date,"dd MMMM yyyy") 
 			 x_tick_unit:24*60
 			 series_label_position: xaxis
+			// style: spline
 			
 			
 			{
 				data "repeat" value:(inhabitants count (each.behavior = "repeat")) 	 color:#blue thickness:2 marker:false ;
 				data "imitate" value:(inhabitants count (each.behavior = "imitate")) 	color:#red thickness:2 marker:false;
 				data "inquire" value:(inhabitants count (each.behavior = "inquire")) 	color:#green thickness:2 marker:false;
-				data "optimize" value:(inhabitants count (each.behavior = "optimize")) 	 color:#orange thickness:2 marker:false ;
+				data "optimize" value:(inhabitants count (each.behavior = "optimize")) 	 color:#brown thickness:2 marker:false ;
 			}
 			
 		}
