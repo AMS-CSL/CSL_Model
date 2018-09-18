@@ -5,7 +5,7 @@ Tourist agents have a specific time budget based on their leaving and return tim
 The basis of the 
 
 ## Tourist Activities
-Six activity types (out of twelve addressed in BOMA) are selected to be included in the model (Julia p.33) \
+Six activity types (out of twelve addressed in BOMA) are selected to be included in the model (Julia p.27 Table 3.3) \
 1-	Walking through the city \
 2-	Sightseeing \
 3-	Cultural activity (museum, art exhibition, zoo etc) \
