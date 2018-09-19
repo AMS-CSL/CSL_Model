@@ -46,8 +46,17 @@ Proportion of people for each activity
 
 ![Proportions](md_images/activityProportions.png)
 
+Activity Probabilities from the table above
+
+![Activity Probab](rm_images/probabilitiesActivity.png)
+
 
 
 Staying time at each activity
 
 ![Staying Time](md_images/stayTime.png)
+
+Flickr Activity times
+
+![Flickr](md_images/flickr.png)
+
