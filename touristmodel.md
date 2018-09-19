@@ -48,7 +48,7 @@ Proportion of people for each activity
 
 Activity Probabilities from the table above
 
-![Activity Probab](rm_images/probabilitiesActivity.png)
+![Activity Probabilities](md_images/probabilitiesActivity.png)
 
 
 
