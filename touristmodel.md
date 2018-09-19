@@ -40,6 +40,6 @@ These options are evaluated for their the time it takes in relation to the avera
 
 
 
-## Inputs
+## Inputs are
 
-![](/md_images/Screenshot_2018-09-19 Master_Thesis_Julia_Ubeda_Briones pdf.png)
+![Staying Time](md_images/stayTime.png)
