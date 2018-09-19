@@ -42,4 +42,4 @@ These options are evaluated for their the time it takes in relation to the avera
 
 ## Inputs
 
-![1537339664222](C:\Users\bhami001\AppData\Roaming\Typora\typora-user-images\1537339664222.png)
+![](D:\gamaProjects\CSL_Model\md_images\Screenshot_2018-09-19 Master_Thesis_Julia_Ubeda_Briones pdf.png)
