@@ -42,4 +42,12 @@ These options are evaluated for their the time it takes in relation to the avera
 
 ## Inputs are
 
+Proportion of people for each activity
+
+![Proportions](md_images/activityProportions.png)
+
+
+
+Staying time at each activity
+
 ![Staying Time](md_images/stayTime.png)
